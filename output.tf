@@ -14,3 +14,15 @@ output "assistant_arn" {
   description = "Assistant Arn"
   value = awscc_wisdom_assistant.example.assistant_arn
 }
+
+output "data_integration_arn" {
+  description = "data integration arn"
+  value = awscc_appintegrations_data_integration.example.data_integration_arn
+}
+
+output "wisdom_knowledge_base_arn" {
+  description = "data integration arn"
+  value = awscc_wisdom_knowledge_base.example.knowledge_base_arn
+}
+
+

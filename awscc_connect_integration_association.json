@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "block": {
+    "attributes": {
+      "id": {
+        "type": "string",
+        "description": "Uniquely identifies the resource.",
+        "description_kind": "plain",
+        "computed": true
+      },
+      "instance_id": {
+        "type": "string",
+        "description": "Amazon Connect instance identifier",
+        "description_kind": "plain",
+        "required": true
+      },
+      "integration_arn": {
+        "type": "string",
+        "description": "ARN of Integration being associated with the instance",
+        "description_kind": "plain",
+        "required": true
+      },
+      "integration_association_id": {
+        "type": "string",
+        "description": "Identifier of the association with Connect Instance",
+        "description_kind": "plain",
+        "computed": true
+      },
+      "integration_type": {
+        "type": "string",
+        "description": "Specifies the integration type to be associated with the instance",
+        "description_kind": "plain",
+        "required": true
+      }
+    },
+    "description": "Resource Type definition for AWS::Connect::IntegrationAssociation",
+    "description_kind": "plain"
+  }
+}
