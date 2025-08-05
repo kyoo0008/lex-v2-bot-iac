@@ -1,0 +1,91 @@
+{
+    "name": "AmazonQinConnect",
+    "identifier": "XNGVYT7ORJ",
+    "description": "This intent leverages Amazon Q in Connect to fulfill requests or tasks.",
+    "parentIntentSignature": "AMAZON.QInConnectIntent",
+    "sampleUtterances": null,
+    "intentConfirmationSetting": null,
+    "intentClosingSetting": null,
+    "inputContexts": null,
+    "outputContexts": null,
+    "kendraConfiguration": null,
+    "qnAIntentConfiguration": null,
+    "bedrockAgentIntentConfiguration": null,
+    "qInConnectIntentConfiguration":
+    {
+        "qInConnectAssistantConfiguration":
+        {
+            "assistantArn": "arn:aws:wisdom:ap-northeast-2:009160043124:assistant/045dcfe4-950d-473e-9a60-25e0690ba821"
+        }
+    },
+    "dialogCodeHook": null,
+    "fulfillmentCodeHook":
+    {
+        "isActive": true,
+        "postFulfillmentStatusSpecification":
+        {
+            "failureResponse": null,
+            "failureNextStep":
+            {
+                "sessionAttributes": null,
+                "intent": null,
+                "dialogAction":
+                {
+                    "type": "EndConversation",
+                    "slotToElicit": null,
+                    "suppressNextMessage": null,
+                    "intentsInScope": null
+                }
+            },
+            "successResponse":
+            {
+                "messageGroupsList":
+                [
+                    {
+                        "message":
+                        {
+                            "ssmlMessage": null,
+                            "customPayload": null,
+                            "plainTextMessage":
+                            {
+                                "value": "((x-amz-lex:q-in-connect-response))"
+                            },
+                            "imageResponseCard": null
+                        },
+                        "variations": null
+                    }
+                ],
+                "allowInterrupt": true
+            },
+            "successNextStep":
+            {
+                "sessionAttributes": null,
+                "intent": null,
+                "dialogAction":
+                {
+                    "type": "EndConversation",
+                    "slotToElicit": null,
+                    "suppressNextMessage": null,
+                    "intentsInScope": null
+                }
+            },
+            "timeoutResponse": null,
+            "timeoutNextStep":
+            {
+                "sessionAttributes": null,
+                "intent": null,
+                "dialogAction":
+                {
+                    "type": "EndConversation",
+                    "slotToElicit": null,
+                    "suppressNextMessage": null,
+                    "intentsInScope": null
+                }
+            }
+        },
+        "fulfillmentUpdatesSpecification": null,
+        "enabled": false
+    },
+    "slotPriorities":
+    []
+}
