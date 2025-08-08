@@ -1,6 +1,3 @@
-
-
-# --- 1. Lex 실행을 위한 IAM 역할 생성 (변경 없음) ---
 resource "aws_iam_role" "lex_role" {
   name = "lexv2-bot-from-local-file-role"
   assume_role_policy = jsonencode({

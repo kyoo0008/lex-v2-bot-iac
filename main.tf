@@ -42,9 +42,15 @@ resource "awscc_wisdom_assistant" "example" {
   }
 
   tags = [{
-    key   = "Name"
-    value = "example-assistant"
+    key   = "AmazonConnectEnabled"
+    value = "True"
   }]
+
+  lifecycle {
+    ignore_changes = [
+      tags,
+    ]
+  }
 }
 
 
@@ -53,43 +59,55 @@ resource "awscc_wisdom_assistant" "example" {
 # # 기술 자료 생성
 # # -----------------------------------------------------------------------------
 resource "awscc_wisdom_knowledge_base" "example" {
-  name                = "example-knowledge-base"
-  knowledge_base_type = "CUSTOM"
+  name                = local.kb_name
+  knowledge_base_type = "EXTERNAL"
   description         = "Example knowledge base for Amazon Q in Connect"
 
-  vector_ingestion_configuration = {
-    chunking_configuration = {
-      chunking_strategy = "SEMANTIC"
-      semantic_chunking_configuration = {
-        breakpoint_percentile_threshold = 90
-        buffer_size                     = 0.8
-        max_tokens                      = 1000
-      }
-    }
-  }
+  # vector_ingestion_configuration = {
+  #   chunking_configuration = {
+  #     chunking_strategy = "SEMANTIC"
+  #     semantic_chunking_configuration = {
+  #       breakpoint_percentile_threshold = 90
+  #       buffer_size                     = 0.8
+  #       max_tokens                      = 1000
+  #     }
+  #   }
+  # }
 
   server_side_encryption_configuration = {
     kms_key_id = awscc_kms_key.example.arn
   }
 
 
-  # source_configuration = {
+  source_configuration = {
 
-  #   app_integrations = {
-  #     app_integration_arn = awscc_appintegrations_data_integration.example.data_integration_arn
+    app_integrations = {
+      app_integration_arn = awscc_appintegrations_data_integration.example.data_integration_arn
 
-  #     # object_fields = [""]
-  #   }
-  # }
+      # object_fields = ["content"]
+    }
+  }
 
   tags = [{
-    key   = "Name"
-    value = "example-knowledge-base"
+    key   = "AmazonConnectEnabled"
+    value = "True"
   }]
+
+  lifecycle {
+    ignore_changes = [
+      tags,
+    ]
+  }
 
   depends_on = [
     awscc_appintegrations_data_integration.example
   ]
+}
+
+resource "awscc_appintegrations_data_integration" "example" {
+  name = "${local.kb_name}"
+  source_uri = "s3://amazon-q-connect-aicc-test-bucket"
+  kms_key = awscc_kms_key.example.arn
 }
 
 # # -----------------------------------------------------------------------------
@@ -97,39 +115,26 @@ resource "awscc_wisdom_knowledge_base" "example" {
 # # -----------------------------------------------------------------------------
 resource "awscc_wisdom_assistant_association" "example" {
   assistant_id      = awscc_wisdom_assistant.example.id
-  association_type  = "KNOWLEDGE_BASE"
+  association_type  = "KNOWLEDGE_BASE" # 이것 밖에 지원 안함 
   association = {
     knowledge_base_id = awscc_wisdom_knowledge_base.example.id
   }
 
   tags = [{
-    key   = "Name"
-    value = "example-association"
+    key   = "AmazonConnectEnabled"
+    value = "True"
   }]
+
+  lifecycle {
+    ignore_changes = [
+      tags,
+    ]
+  }
 
   depends_on = [
     awscc_wisdom_knowledge_base.example
   ]
 }
 
-
-
-resource "awscc_appintegrations_data_integration" "example" {
-  name = "example_integ"
-  source_uri = "s3://amazon-q-connect-aicc-test-bucket"
-  kms_key = awscc_kms_key.example.arn
-}
-
-# resource "awscc_connect_integration_association" "wisdom_assistant" {
-#   instance_id      = data.aws_connect_instance.connect_instance.arn
-#   integration_arn  = awscc_wisdom_assistant.example.assistant_arn
-#   integration_type = "WISDOM_ASSISTANT"
-# }
-
-# resource "awscc_connect_integration_association" "wisdom_knowledge_base" {
-#   instance_id      = data.aws_connect_instance.connect_instance.arn
-#   integration_arn  = awscc_wisdom_knowledge_base.example.knowledge_base_arn
-#   integration_type = "WISDOM_KNOWLEDGE_BASE"
-# }
 
 

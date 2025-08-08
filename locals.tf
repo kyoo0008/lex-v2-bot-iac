@@ -1,5 +1,3 @@
-# locals.tf
-
 locals {
   # 압축할 최상위 소스 폴더 이름 정의
   lex_source_root_folder = "qic-test-bot-DRAFT-9BZCNEJHKK-LexJson"
@@ -24,7 +22,7 @@ locals {
       }
     }
   }
-
+  kb_name = "example-knowledge-base"
   # 원본과 새로운 설정 병합
   modified_intent_data        = merge(local.original_intent_data, local.new_q_in_connect_config)
   modified_intent_json_string = jsonencode(local.modified_intent_data)
