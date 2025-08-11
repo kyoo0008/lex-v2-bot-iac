@@ -71,3 +71,62 @@ aws connect create-integration-association \
 EOT
   }
 }
+
+resource "terraform_data" "wisdom_ai_prompt_manager" {
+
+  triggers_replace = [
+    awscc_wisdom_assistant.example,
+    local.prompt_name,
+    local.prompt_model_id,
+    filemd5(data.local_file.prompt_txt.filename)
+  ]
+
+  provisioner "local-exec" {
+    command = <<EOT
+
+AI_PROMPT_JSON=$(aws qconnect list-ai-prompts \
+--assistant-id "${awscc_wisdom_assistant.example.assistant_id}" \
+--query "aiPromptSummaries[?name=='${local.prompt_name}']" \
+--output json)
+
+if [ "$(echo "$AI_PROMPT_JSON" | jq 'length')" -gt 0 ]; then
+  echo "$AI_PROMPT_JSON" | jq -r '.[].aiPromptId' | while read -r AI_PROMPT_ID; do
+    echo "Deleting AI Prompt: $AI_PROMPT_ID"
+    aws qconnect delete-ai-prompt \
+      --assistant-id "${awscc_wisdom_assistant.example.assistant_id}" \
+      --ai-prompt-id "$AI_PROMPT_ID"
+    sleep 1
+  done
+else
+  echo "AI Prompt not found, skipping deletion."
+fi
+
+GIT_ROOT_PATH=$(git rev-parse --show-toplevel)
+
+PROMPT_CONTENT=$(cat $GIT_ROOT_PATH/prompt.txt)
+
+jq -n \
+  --arg assistantId "${awscc_wisdom_assistant.example.assistant_id}" \
+  --arg promptName "${local.prompt_name}" \
+  --arg promptContent "$PROMPT_CONTENT" \
+  '{
+    "assistantId": $assistantId,
+    "name": $promptName,
+    "apiFormat": "TEXT_COMPLETIONS",
+    "modelId": "${local.prompt_model_id}",
+    "templateType": "TEXT",
+    "type": "ANSWER_GENERATION",
+    "visibilityStatus": "PUBLISHED",
+    "templateConfiguration": {
+      "textFullAIPromptEditTemplateConfiguration": {
+        "text": $promptContent
+      }
+    }
+  }' > qconnect-prompt-input.json
+
+aws qconnect create-ai-prompt \
+  --region ${var.region} \
+  --cli-input-json file://qconnect-prompt-input.json | jq .
+EOT
+  }
+}

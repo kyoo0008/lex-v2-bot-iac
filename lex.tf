@@ -1,3 +1,4 @@
+
 resource "aws_iam_role" "lex_role" {
   name = "lexv2-bot-from-local-file-role"
   assume_role_policy = jsonencode({
@@ -17,10 +18,8 @@ resource "aws_iam_role_policy_attachment" "lex_policy_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonLexFullAccess"
 }
 
-# --- 2. 봇 정의 파일을 저장할 S3 버킷 생성 (변경 없음) ---
-resource "random_pet" "bucket_suffix" {
-  length = 2
-}
+# --- 2. 봇 정의 파일을 저장할 S3 버킷 생성 ---
+
 
 resource "aws_s3_bucket" "lex_bot_bucket" {
   bucket = "lex-bot-definition-bucket-${random_pet.bucket_suffix.id}"
@@ -57,7 +56,7 @@ resource "aws_s3_object" "bot_definition_upload" {
   bucket = aws_s3_bucket.lex_bot_bucket.id
   key    = "bot-definition-final.zip"
   source = data.archive_file.bot_zip.output_path
-  etag   = data.archive_file.bot_zip.output_md5
+  source_hash = filemd5(data.archive_file.bot_zip.output_path)
 }
 
 # Lex 봇 생성
@@ -75,6 +74,12 @@ resource "awscc_lex_bot" "bot_from_folder" {
     s3_bucket     = aws_s3_bucket.lex_bot_bucket.id
     s3_object_key = aws_s3_object.bot_definition_upload.key
   }
+
+  # Lexbot에 이 태그가 달려있어야 Connect instance 내부에서 보임 
+  bot_tags = [{ 
+    key   = "AmazonConnectEnabled"
+    value = "True"
+  }]
 
   depends_on = [
     aws_s3_object.bot_definition_upload,

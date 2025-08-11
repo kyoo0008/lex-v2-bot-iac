@@ -2,7 +2,7 @@
 
 # AWS 공급자 설정
 provider "awscc" {
-  region = "ap-northeast-2" # 원하는 리전으로 변경
+  region = "${var.region}" # 원하는 리전으로 변경
 }
 
 data "aws_caller_identity" "current" {}
@@ -106,16 +106,37 @@ resource "awscc_wisdom_knowledge_base" "example" {
 
 resource "awscc_appintegrations_data_integration" "example" {
   name = "${local.kb_name}"
-  source_uri = "s3://amazon-q-connect-aicc-test-bucket"
+  source_uri = "s3://${aws_s3_bucket.qic_kb_bucket.bucket}"
   kms_key = awscc_kms_key.example.arn
+
+  depends_on = [
+    aws_s3_object.qic_kb_documents
+  ]
 }
+
+
+resource "aws_s3_bucket" "qic_kb_bucket" {
+  bucket = "qic-kb-bucket-test"
+  force_destroy = false
+}
+
+# S3 업로드
+resource "aws_s3_object" "qic_kb_documents" {
+  bucket = aws_s3_bucket.qic_kb_bucket.id
+  key    = "kb.pdf"
+  source = data.local_file.qic_kb.filename
+  source_hash   = filemd5(data.local_file.qic_kb.filename)
+}
+
+
+
 
 # # -----------------------------------------------------------------------------
 # # Assistant와 기술 자료 연결
 # # -----------------------------------------------------------------------------
 resource "awscc_wisdom_assistant_association" "example" {
   assistant_id      = awscc_wisdom_assistant.example.id
-  association_type  = "KNOWLEDGE_BASE" # 이것 밖에 지원 안함 
+  association_type  = "KNOWLEDGE_BASE" # type은 이것 밖에 지원 안함 
   association = {
     knowledge_base_id = awscc_wisdom_knowledge_base.example.id
   }

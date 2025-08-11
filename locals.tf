@@ -22,7 +22,7 @@ locals {
       }
     }
   }
-  kb_name = "example-knowledge-base"
+  kb_name = "example-knowledge-base-test"
   # 원본과 새로운 설정 병합
   modified_intent_data        = merge(local.original_intent_data, local.new_q_in_connect_config)
   modified_intent_json_string = jsonencode(local.modified_intent_data)
@@ -31,4 +31,7 @@ locals {
   all_source_files        = fileset(local.full_source_root_path, "**/*")
   files_to_exclude        = toset(concat([local.relative_intent_path], [for f in local.all_source_files : f if endswith(f, ".DS_Store")]))
   unmodified_source_files = setsubtract(local.all_source_files, local.files_to_exclude)
+
+  prompt_name = "example_text_completion_ai_prompt"
+  prompt_model_id = "apac.amazon.nova-micro-v1:0"
 }

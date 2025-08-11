@@ -391,4 +391,12 @@ package-lock.json
 
 
 # terraform
+terraform.*
 .terraform/
+**/.terraform.lock.hcl
+!./environment/*/.terraform.lock.hcl
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+.terraformrc
+terraform.rc
