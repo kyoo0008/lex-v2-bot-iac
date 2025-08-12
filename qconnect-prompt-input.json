@@ -1,5 +1,5 @@
 {
-  "assistantId": "569bac0b-c0e9-4047-bb2a-93a2733fd749",
+  "assistantId": "390ad2e7-72fd-4805-9528-a41e6066fc45",
   "name": "example_text_completion_ai_prompt",
   "apiFormat": "TEXT_COMPLETIONS",
   "modelId": "apac.amazon.nova-micro-v1:0",

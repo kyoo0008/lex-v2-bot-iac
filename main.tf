@@ -63,21 +63,9 @@ resource "awscc_wisdom_knowledge_base" "example" {
   knowledge_base_type = "EXTERNAL"
   description         = "Example knowledge base for Amazon Q in Connect"
 
-  # vector_ingestion_configuration = {
-  #   chunking_configuration = {
-  #     chunking_strategy = "SEMANTIC"
-  #     semantic_chunking_configuration = {
-  #       breakpoint_percentile_threshold = 90
-  #       buffer_size                     = 0.8
-  #       max_tokens                      = 1000
-  #     }
-  #   }
-  # }
-
   server_side_encryption_configuration = {
     kms_key_id = awscc_kms_key.example.arn
   }
-
 
   source_configuration = {
 

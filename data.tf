@@ -7,7 +7,7 @@ data "local_file" "qic_kb" {
 }
 
 data "local_file" "prompt_txt" {
-  filename = "${path.module}/prompt.txt"
+  filename = "${path.module}/prompts/prompt.txt"
 }
 
 resource "random_pet" "bucket_suffix" {

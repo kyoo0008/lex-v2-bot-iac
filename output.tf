@@ -35,13 +35,12 @@ output "wisdom_knowledge_base_arn" {
   value = awscc_wisdom_knowledge_base.example.knowledge_base_arn
 }
 
-# output "ai_prompt_arn" {
-#   description = "AI Prompt Arn"
-#   value = awscc_wisdom_ai_prompt.example.ai_prompt_arn
-# }
+output "ai_prompt_arn" {
+  description = "The ARN of the found AI prompt."
+  value       = data.external.wisdom_ai_prompt.result.ai_prompt_arn
+}
 
-# output "ai_prompt_version" {
-#   description = "AI Prompt Version"
-#   value = awscc_wisdom_ai_prompt.example.ai_prompt_arn
-# }
-
+output "ai_agent_arn" {
+  description = "The ARN of AI Agent."
+  value       = awscc_wisdom_ai_agent.example.ai_agent_arn
+}

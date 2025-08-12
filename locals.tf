@@ -1,7 +1,7 @@
 locals {
   # 압축할 최상위 소스 폴더 이름 정의
   lex_source_root_folder = "qic-test-bot-DRAFT-9BZCNEJHKK-LexJson"
-  
+  lex_bot_name = "qic-test-bot"
   # 실제 파일 시스템에서의 전체 경로
   full_source_root_path = "${var.project_root_path}${local.lex_source_root_folder}"
 
