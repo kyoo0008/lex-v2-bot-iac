@@ -40,7 +40,12 @@ output "ai_prompt_arn" {
   value       = data.external.wisdom_ai_prompt.result.ai_prompt_arn
 }
 
+# output "ai_prompt_version" {
+#   description = "The version of the found AI prompt."
+#   value       = awscc_wisdom_ai_prompt_version.example.version_number
+# }
+
 output "ai_agent_arn" {
   description = "The ARN of AI Agent."
-  value       = awscc_wisdom_ai_agent.example.ai_agent_arn
+  value       = data.external.wisdom_ai_agent.result.ai_agent_arn
 }
