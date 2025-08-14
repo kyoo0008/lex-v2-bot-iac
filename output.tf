@@ -15,10 +15,10 @@ output "qic_kb_s3_bucket_name" {
   value       = aws_s3_bucket.qic_kb_bucket.id
 }
 
-output "qic_kb_s3_object_key" {
-  description = "S3 버킷에 업로드된 파일의 Qic KB Key"
-  value       = aws_s3_object.qic_kb_documents.key
-}
+# output "qic_kb_s3_object_key" {
+#   description = "S3 버킷에 업로드된 파일의 Qic KB Key"
+#   value       = aws_s3_object.qic_kb_documents.key
+# }
 
 output "assistant_arn" {
   description = "Assistant Arn"

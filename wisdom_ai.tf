@@ -19,7 +19,7 @@ resource "terraform_data" "wisdom_ai_agent_manager" {
   }
 
   provisioner "local-exec" {
-    command = "chmod +x ${path.module}/scripts/manage_ai_agent.sh && ${path.module}/scripts/manage_ai_agent.sh create"
+    command = "chmod +x ${path.module}/scripts/manage_ai_agent.sh && ${path.module}/scripts/manage_ai_agent.sh upsert"
     
     # 스크립트에 환경 변수로 값 전달
     environment = {

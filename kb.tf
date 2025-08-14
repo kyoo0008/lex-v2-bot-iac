@@ -41,3 +41,23 @@ resource "terraform_data" "association_manager" {
   }
 }
 
+resource "aws_s3_object" "folder_upload" {
+  # for_each = fileset("${path.module}/QiCContent", "**/*")
+  for_each = {
+    for file in fileset("${path.module}/QiCContent", "**/*") : file => file
+    if !can(regex(".*\\.DS_Store$", file)) # Example: ignore files ending with .ignore
+  }
+
+
+  bucket = aws_s3_bucket.qic_kb_bucket.id
+  key    = each.value
+  source = "${path.module}/QiCContent/${each.value}"
+
+  source_hash = filemd5("${path.module}/QiCContent/${each.value}")
+
+  # lifecycle {
+  #   ignore_changes = [
+  #     tags
+  #   ]
+  # }
+}

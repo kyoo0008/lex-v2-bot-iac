@@ -24,7 +24,19 @@ resource "awscc_kms_key" "example" {
         }
         Action   = "kms:*"
         Resource = "*"
-      }
+      },
+      {
+        Effect = "Allow",
+        Principal = {
+            Service = "connect.amazonaws.com"
+        },
+        Action = [
+            "kms:Decrypt",
+            "kms:GenerateDataKey*",
+            "kms:DescribeKey"
+        ],
+        Resource = "*"
+    }
     ]
   })
 }
@@ -98,7 +110,7 @@ resource "awscc_appintegrations_data_integration" "example" {
   kms_key = awscc_kms_key.example.arn
 
   depends_on = [
-    aws_s3_object.qic_kb_documents
+    aws_s3_object.folder_upload
   ]
 }
 
@@ -107,15 +119,6 @@ resource "aws_s3_bucket" "qic_kb_bucket" {
   bucket = "qic-kb-bucket-test"
   force_destroy = false
 }
-
-# S3 업로드
-resource "aws_s3_object" "qic_kb_documents" {
-  bucket = aws_s3_bucket.qic_kb_bucket.id
-  key    = "kb.pdf"
-  source = data.local_file.qic_kb.filename
-  source_hash   = filemd5(data.local_file.qic_kb.filename)
-}
-
 
 
 
