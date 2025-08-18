@@ -1,4 +1,4 @@
-# To-do : delete logic에 kb content 삭제 관리도 추가하기 
+# To-do : knowledge_base_manager delete logic에 kb content 삭제 관리도 추가하기 
 # -----------------------------------------------------------------------------
 # Manage Knowledge Base 
 # -----------------------------------------------------------------------------
