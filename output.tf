@@ -10,10 +10,10 @@ output "lex_bot_s3_object_key" {
   value       = aws_s3_object.bot_definition_upload.key
 }
 
-output "qic_kb_s3_bucket_name" {
-  description = "QiC KB 파일이 저장된 S3 버킷 이름"
-  value       = aws_s3_bucket.qic_kb_bucket.id
-}
+# output "qic_kb_s3_bucket_name" {
+#   description = "QiC KB 파일이 저장된 S3 버킷 이름"
+#   value       = aws_s3_bucket.qic_kb_bucket.id
+# }
 
 # output "qic_kb_s3_object_key" {
 #   description = "S3 버킷에 업로드된 파일의 Qic KB Key"

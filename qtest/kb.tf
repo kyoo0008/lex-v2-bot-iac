@@ -2,50 +2,50 @@
 # -----------------------------------------------------------------------------
 # Manage Knowledge Base 
 # -----------------------------------------------------------------------------
-resource "terraform_data" "wisdom_knowledge_base" {
+# resource "terraform_data" "wisdom_knowledge_base" {
 
-  triggers_replace = [
-    awscc_wisdom_assistant.example,
-    local.knowledge_base_name,
-    local.knowledge_base_model_id
-  ]
+#   triggers_replace = [
+#     awscc_wisdom_assistant.example,
+#     local.knowledge_base_name,
+#     local.knowledge_base_model_id
+#   ]
 
-  input = {
-    assistant_id   = awscc_wisdom_assistant.example.assistant_id
-    model_id       = local.knowledge_base_model_id
-    region         = var.region
-    knowledge_base_name    = local.knowledge_base_name
-  }
+#   input = {
+#     assistant_id   = awscc_wisdom_assistant.example.assistant_id
+#     model_id       = local.knowledge_base_model_id
+#     region         = var.region
+#     knowledge_base_name    = local.knowledge_base_name
+#   }
 
-  provisioner "local-exec" {
-    command = "chmod +x ${path.module}/scripts/manage_knowledge_base.sh && ${path.module}/scripts/manage_knowledge_base.sh create"
+#   provisioner "local-exec" {
+#     command = "chmod +x ${path.module}/scripts/manage_knowledge_base.sh && ${path.module}/scripts/manage_knowledge_base.sh create"
     
-    # 스크립트에 환경 변수로 값 전달
-    environment = {
-      ASSISTANT_ID   = self.input.assistant_id
-      MODEL_ID       = self.input.model_id
-      REGION         = self.input.region
-      KNOWLEDGE_BASE_CONTENT = self.input.knowledge_base_content
-      KNOWLEDGE_BASE_NAME    = self.input.knowledge_base_name
-    }
-  }
+#     # 스크립트에 환경 변수로 값 전달
+#     environment = {
+#       ASSISTANT_ID   = self.input.assistant_id
+#       MODEL_ID       = self.input.model_id
+#       REGION         = self.input.region
+#       KNOWLEDGE_BASE_CONTENT = self.input.knowledge_base_content
+#       KNOWLEDGE_BASE_NAME    = self.input.knowledge_base_name
+#     }
+#   }
 
-  provisioner "local-exec" {
-    when    = destroy
-    command = "chmod +x ${path.module}/scripts/manage_knowledge_base.sh && ${path.module}/scripts/manage_knowledge_base.sh delete"
+#   provisioner "local-exec" {
+#     when    = destroy
+#     command = "chmod +x ${path.module}/scripts/manage_knowledge_base.sh && ${path.module}/scripts/manage_knowledge_base.sh delete"
     
-    environment = {
-      ASSISTANT_ID   = self.input.assistant_id
-      MODEL_ID       = self.input.model_id
-      REGION         = self.input.region
-      KNOWLEDGE_BASE_CONTENT = self.input.knowledge_base_content
-      KNOWLEDGE_BASE_NAME    = self.input.knowledge_base_name
-    }
-  }
-}
+#     environment = {
+#       ASSISTANT_ID   = self.input.assistant_id
+#       MODEL_ID       = self.input.model_id
+#       REGION         = self.input.region
+#       KNOWLEDGE_BASE_CONTENT = self.input.knowledge_base_content
+#       KNOWLEDGE_BASE_NAME    = self.input.knowledge_base_name
+#     }
+#   }
+# }
 
 # -----------------------------------------------------------------------------
-# Manage Assistant Association
+# Manage Assistant <-> KnowledgeBase Association
 # -----------------------------------------------------------------------------
 resource "terraform_data" "association_manager" {
   triggers_replace = [
@@ -83,5 +83,4 @@ resource "terraform_data" "association_manager" {
       KB_ARN              = self.input.kb_arn
     }
   }
-
 }
