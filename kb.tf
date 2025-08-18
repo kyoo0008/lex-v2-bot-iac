@@ -1,20 +1,20 @@
-
+# To-do : delete logic에 kb content 삭제 관리도 추가하기 
 # -----------------------------------------------------------------------------
 # Manage Knowledge Base 
 # -----------------------------------------------------------------------------
-resource "terraform_data" "wisdom_knowledge_base" {
+resource "terraform_data" "knowledge_base_manager" {
 
   triggers_replace = [
     awscc_wisdom_assistant.example,
-    local.knowledge_base_name,
-    local.knowledge_base_model_id
+    local.kb_name,
   ]
 
   input = {
     assistant_id   = awscc_wisdom_assistant.example.assistant_id
-    model_id       = local.knowledge_base_model_id
     region         = var.region
-    knowledge_base_name    = local.knowledge_base_name
+    knowledge_base_name    = local.kb_name
+    kms_key_id_arn   = awscc_kms_key.example.arn
+    content_path = local.content_path
   }
 
   provisioner "local-exec" {
@@ -22,11 +22,10 @@ resource "terraform_data" "wisdom_knowledge_base" {
     
     # 스크립트에 환경 변수로 값 전달
     environment = {
-      ASSISTANT_ID   = self.input.assistant_id
-      MODEL_ID       = self.input.model_id
+      KMS_KEY_ID_ARN = self.input.kms_key_id_arn
       REGION         = self.input.region
-      KNOWLEDGE_BASE_CONTENT = self.input.knowledge_base_content
       KNOWLEDGE_BASE_NAME    = self.input.knowledge_base_name
+      CONTENT_PATH = self.input.content_path
     }
   }
 
@@ -35,29 +34,32 @@ resource "terraform_data" "wisdom_knowledge_base" {
     command = "chmod +x ${path.module}/scripts/manage_knowledge_base.sh && ${path.module}/scripts/manage_knowledge_base.sh delete"
     
     environment = {
-      ASSISTANT_ID   = self.input.assistant_id
-      MODEL_ID       = self.input.model_id
+      KMS_KEY_ID_ARN = self.input.kms_key_id_arn
       REGION         = self.input.region
-      KNOWLEDGE_BASE_CONTENT = self.input.knowledge_base_content
       KNOWLEDGE_BASE_NAME    = self.input.knowledge_base_name
+      CONTENT_PATH = self.input.content_path
     }
   }
+
+  depends_on = [
+    awscc_kms_key.example,
+    awscc_wisdom_assistant.example
+  ]
 }
 
 # -----------------------------------------------------------------------------
 # Manage Assistant Association
 # -----------------------------------------------------------------------------
-resource "terraform_data" "association_manager" {
+resource "terraform_data" "assistant_association_manager" {
   triggers_replace = [
     awscc_wisdom_assistant.example,
-    awscc_wisdom_knowledge_base.example,
     data.aws_connect_instance.connect_instance.id
   ]
 
   input = {
     connect_instance_id = data.aws_connect_instance.connect_instance.id
     assistant_arn       = awscc_wisdom_assistant.example.assistant_arn
-    kb_arn              = awscc_wisdom_knowledge_base.example.knowledge_base_arn
+    kb_name              = local.kb_name
   }
 
   # 생성 및 업데이트 프로비저너
@@ -68,7 +70,7 @@ resource "terraform_data" "association_manager" {
     environment = {
       CONNECT_INSTANCE_ID = self.input.connect_instance_id
       ASSISTANT_ARN       = self.input.assistant_arn
-      KB_ARN              = self.input.kb_arn
+      KB_NAME              = self.input.kb_name
     }
   }
 
@@ -80,8 +82,11 @@ resource "terraform_data" "association_manager" {
     environment = {
       CONNECT_INSTANCE_ID = self.input.connect_instance_id
       ASSISTANT_ARN       = self.input.assistant_arn
-      KB_ARN              = self.input.kb_arn
+      KB_NAME              = self.input.kb_name
     }
   }
 
+  depends_on = [
+    terraform_data.knowledge_base_manager
+  ]
 }

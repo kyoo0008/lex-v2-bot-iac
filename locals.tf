@@ -40,4 +40,8 @@ locals {
    #[en_US, en_GB, en_AU, en_NZ, en_IE, en_ZA, en_IN, en_CY, en_SG, es_ES, es_MX, es_US, fr_FR, fr_BE, fr_CA, de_DE, de_AT, de_CH, it_IT, pt_BR, pt_PT, ca_ES, zh_HK, zh_CN, ja_JP, ko_KR, ar_AE, ar, nl_BE, nl_NL, fi_FI, da_DK, no_NO, sv_SE, is_IS, hi_IN, pl_PL, ro_RO, ru_RU, cs_CZ, sk_SK, hu_HU, sr_RS, lt_LT, lv_LV, et_EE, sl_SI, bg_BG, cy_GB, id_ID, th_TH, ms_MY, tl_PH, vi_VN, km_KH, hmn, lo_LA, zu_ZA, xh_ZA, af_ZA, fa_IR, he_IL, ga_IE, hy_AM, tr_TR]
   locale = "en_US" 
   agent_type = "ANSWER_RECOMMENDATION"
+
+
+
+  content_path = "${path.module}/QiCContent"
 }
