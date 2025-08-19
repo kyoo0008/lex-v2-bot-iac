@@ -109,6 +109,7 @@ case "$ACTION" in
   # 삭제 시: 기존 연결 모두 삭제
   delete)
     echo "Performing 'delete' action for all associations."
+    delete_assistant_associations
     delete_connect_associations_by_type "WISDOM_ASSISTANT"
     delete_connect_associations_by_type "WISDOM_KNOWLEDGE_BASE"
     ;;

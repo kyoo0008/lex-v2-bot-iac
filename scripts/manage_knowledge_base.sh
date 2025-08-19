@@ -5,64 +5,71 @@ set -e # 스크립트 실행 중 오류가 발생하면 즉시 중단
 ACTION="$1"
 
 # 환경 변수에서 값들을 가져옵니다.
-if [ -z "$KMS_KEY_ID_ARN" ] || [ -z "$CONTENT_PATH" ] || [ -z "$KNOWLEDGE_BASE_NAME" ]; then
+if [ -z "$KMS_KEY_ID_ARN" ] || [ -z "$CONTENT_PATH" ] || [ -z "$KNOWLEDGE_BASE_NAME" ] || [ -z "$ASSISTANT_ARN" ] || [ -z "$CONNECT_INSTANCE_ID" ]; then
   echo "Error: Required environment variables are not set."
   exit 1
 fi
 
-# --- 공통 함수: 지식기반 삭제 ---
-delete_knowledge_base() {
-  echo "Searching for existing KnowledgeBase named '$KNOWLEDGE_BASE_NAME'..."
+ASSISTANT_ID=$(echo "$ASSISTANT_ARN" | awk -F'/' '{print $NF}')
+
+delete_connect_associations_by_type() {
+  local INTEGRATION_TYPE="$1" # 함수 내 지역 변수로 선언
+
+  echo "Searching for Amazon Connect instance associations of type: $INTEGRATION_TYPE"
   
-  KNOWLEDGE_BASE_JSON=$(aws qconnect list-knowledge-bases \
-    --query "knowledgeBaseSummaries[?name=='$KNOWLEDGE_BASE_NAME']" \
+  ASSOCIATIONS_JSON=$(aws connect list-integration-associations \
+    --instance-id "$CONNECT_INSTANCE_ID" \
+    --query "IntegrationAssociationSummaryList[?IntegrationType=='$INTEGRATION_TYPE']" \
     --output json)
 
-  if [ "$(echo "$KNOWLEDGE_BASE_JSON" | jq 'length')" -gt 0 ]; then
-    echo "$KNOWLEDGE_BASE_JSON" | jq -r '.[].knowledgeBaseId' | while read -r KNOWLEDGE_BASE_ID; do
-      echo "Deleting KnowledgeBase ID: $KNOWLEDGE_BASE_ID"
-      aws qconnect delete-knowledge-base \
-        --knowledge-base-id "$KNOWLEDGE_BASE_ID"
+  if [ "$(echo "$ASSOCIATIONS_JSON" | jq 'length')" -gt 0 ]; then
+    echo "$ASSOCIATIONS_JSON" | jq -r '.[].IntegrationAssociationId' | while read -r ASSOCIATION_ID; do
+      echo "Deleting association ID: $ASSOCIATION_ID (Type: $INTEGRATION_TYPE)"
+      aws connect delete-integration-association \
+        --instance-id "$CONNECT_INSTANCE_ID" \
+        --integration-association-id "$ASSOCIATION_ID"
       sleep 1
     done
   else
-    echo "KnowledgeBase not found, skipping deletion."
+    echo "Association type '$INTEGRATION_TYPE' not found, skipping deletion."
   fi
+
 }
 
-# --- 공통 함수: 지식기반 생성 및 콘텐츠 재귀적 업로드 ---
-create_knowledge_base() {
-  echo "Creating new KnowledgeBase '$KNOWLEDGE_BASE_NAME'..."
+delete_assistant_associations() {
 
-  # 입력용 JSON 생성: CUSTOM 타입
-  INPUT_JSON=$(jq -n \
-    --arg knowledgeBaseName "$KNOWLEDGE_BASE_NAME" \
-    --arg kmsKeyIdArn "$KMS_KEY_ID_ARN" \
-    '{
-      "name": $knowledgeBaseName,
-      "knowledgeBaseType": "CUSTOM",
-      "serverSideEncryptionConfiguration": {
-        "kmsKeyId": $kmsKeyIdArn
-      },
-      "tags": {
-        "AmazonConnectEnabled": "True"
-      }
-    }')
+  echo "Searching for Amazon Q Connect Assistant associations for Assistant Arn : $ASSISTANT_ARN"
   
-  # 지식기반 생성 API 호출
-  CREATED_KNOWLEDGE_BASE_ID=$(aws qconnect create-knowledge-base \
-    --region "$REGION" \
-    --cli-input-json "$INPUT_JSON" \
-    --output json | jq -r '.knowledgeBase.knowledgeBaseId')
+  ASSISTANT_ASSOCIATIONS_JSON=$(aws qconnect list-assistant-associations \
+    --assistant-id $ASSISTANT_ID \
+    --query "assistantAssociationSummaries[?assistantArn=='$ASSISTANT_ARN']" \
+    --output json)
 
-  echo "KnowledgeBase created (ID: $CREATED_KNOWLEDGE_BASE_ID). Starting recursive content upload from 'QiCContent' directory..."
 
-   # 경로 수정
-  if [ ! -d "$CONTENT_PATH" ]; then
-      echo "Error: Content directory not found at $CONTENT_PATH"
-      exit 1
+  if [ "$(echo "$ASSISTANT_ASSOCIATIONS_JSON" | jq 'length')" -gt 0 ] || [ -z "$ASSISTANT_ID" ]; then
+    echo "$ASSISTANT_ASSOCIATIONS_JSON" | jq -r '.[].assistantAssociationId' | while read -r ASSISTANT_ASSOCIATION_ID; do
+      echo "Deleting assistant association ID: $ASSISTANT_ASSOCIATION_ID"
+      aws qconnect delete-assistant-association \
+        --assistant-association-id $ASSISTANT_ASSOCIATION_ID \
+        --assistant-id $ASSISTANT_ID
+      sleep 1
+    done
+  else
+    echo "Association assistant arn '$ASSISTANT_ARN' not found, skipping deletion."
   fi
 
+}
+
+start_content_upload() {
+  KNOWLEDGE_BASE_ID=$1
+  # ================================================================================
+  # Start Content Upload
+  # ================================================================================
+  if [ ! -d "$CONTENT_PATH" ]; then
+    echo "Error: Content directory not found at $CONTENT_PATH"
+    exit 1
+  fi
+  # 지원되는 KB Content 확장자 .pdf, .txt, .docx, .html/.htm 
   find "$CONTENT_PATH" -type f \( -name "*.docx" -o -name "*.txt" \) | while read -r FILE_PATH; do
     echo "--------------------------------------------------"
     echo "Processing file: $FILE_PATH"
@@ -82,7 +89,7 @@ create_knowledge_base() {
 
     echo "Starting upload for '$CONTENT_NAME'..."
     UPLOAD_INFO_JSON=$(aws qconnect start-content-upload \
-      --knowledge-base-id "$CREATED_KNOWLEDGE_BASE_ID" \
+      --knowledge-base-id "$KNOWLEDGE_BASE_ID" \
       --content-type "$CONTENT_TYPE" \
       --output json)
 
@@ -118,7 +125,7 @@ create_knowledge_base() {
 
     echo "Creating content metadata..."
     aws qconnect create-content \
-      --knowledge-base-id "$CREATED_KNOWLEDGE_BASE_ID" \
+      --knowledge-base-id "$KNOWLEDGE_BASE_ID" \
       --name "$CONTENT_NAME" \
       --upload-id "$UPLOAD_ID" > /dev/null
 
@@ -129,10 +136,94 @@ create_knowledge_base() {
   echo "All files have been processed."
 }
 
+create_connect_association() {
+  local INTEGRATION_TYPE="$1"
+  local INTEGRATION_ARN="$2"
+
+  if [ -z "$INTEGRATION_ARN" ]; then
+    echo "Warning: ARN for $INTEGRATION_TYPE is empty, skipping creation."
+    return
+  fi
+
+  echo "Creating association for type: $INTEGRATION_TYPE"
+  aws connect create-integration-association \
+    --instance-id "$CONNECT_INSTANCE_ID" \
+    --integration-type "$INTEGRATION_TYPE" \
+    --integration-arn "$INTEGRATION_ARN"
+}
+
+create_assistant_associations() {
+  KNOWLEDGE_BASE_ID=$1
+  echo "Creating association for assistant($ASSISTANT_ID) and kb($KNOWLEDGE_BASE_ID) "
+  aws qconnect create-assistant-association \
+    --assistant-id "$ASSISTANT_ID" \
+    --association-type "KNOWLEDGE_BASE" \
+    --association "{\"knowledgeBaseId\": \"$KNOWLEDGE_BASE_ID\"}" 
+}
+
+delete_knowledge_base() {
+  echo "Searching for existing KnowledgeBase named '$KNOWLEDGE_BASE_NAME'..."
+  
+  KNOWLEDGE_BASE_JSON=$(aws qconnect list-knowledge-bases \
+    --query "knowledgeBaseSummaries[?name=='$KNOWLEDGE_BASE_NAME']" \
+    --output json)
+
+  if [ "$(echo "$KNOWLEDGE_BASE_JSON" | jq 'length')" -gt 0 ]; then
+    echo "$KNOWLEDGE_BASE_JSON" | jq -r '.[].knowledgeBaseId' | while read -r KNOWLEDGE_BASE_ID; do
+      echo "Deleting KnowledgeBase ID: $KNOWLEDGE_BASE_ID"
+      aws qconnect delete-knowledge-base \
+        --knowledge-base-id "$KNOWLEDGE_BASE_ID"
+      sleep 1
+    done
+  else
+    echo "KnowledgeBase not found, skipping deletion."
+  fi
+
+  delete_connect_associations_by_type "WISDOM_ASSISTANT"
+  delete_connect_associations_by_type "WISDOM_KNOWLEDGE_BASE"
+  delete_assistant_associations
+}
+
+create_knowledge_base() {
+  echo "Creating new KnowledgeBase '$KNOWLEDGE_BASE_NAME'..."
+
+  # 입력용 JSON 생성: CUSTOM 타입
+  INPUT_JSON=$(jq -n \
+    --arg knowledgeBaseName "$KNOWLEDGE_BASE_NAME" \
+    --arg kmsKeyIdArn "$KMS_KEY_ID_ARN" \
+    '{
+      "name": $knowledgeBaseName,
+      "knowledgeBaseType": "CUSTOM",
+      "serverSideEncryptionConfiguration": {
+        "kmsKeyId": $kmsKeyIdArn
+      },
+      "tags": {
+        "AmazonConnectEnabled": "True"
+      }
+    }')
+  
+  # 지식기반 생성 API 호출
+  CREATED_KNOWLEDGE_BASE_ARN=$(aws qconnect create-knowledge-base \
+    --region "$REGION" \
+    --cli-input-json "$INPUT_JSON" \
+    --output json | jq -r '.knowledgeBase.knowledgeBaseArn')
+
+  CREATED_KNOWLEDGE_BASE_ID=$(echo "$CREATED_KNOWLEDGE_BASE_ARN" | awk -F'/' '{print $NF}')
+
+  echo "KnowledgeBase created (ID: $CREATED_KNOWLEDGE_BASE_ARN). Starting recursive content upload from 'QiCContent' directory..."
+  
+  start_content_upload $CREATED_KNOWLEDGE_BASE_ID
+  create_assistant_associations $CREATED_KNOWLEDGE_BASE_ID
+  create_connect_association "WISDOM_ASSISTANT" "$ASSISTANT_ARN"
+  create_connect_association "WISDOM_KNOWLEDGE_BASE" "$CREATED_KNOWLEDGE_BASE_ARN"
+  
+}
+
 
 # --- 메인 로직 ---
 case "$ACTION" in
   create)
+
     delete_knowledge_base
     create_knowledge_base
     ;;
