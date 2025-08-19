@@ -70,49 +70,54 @@
 # # -----------------------------------------------------------------------------
 # # Manage AI Prompt 
 # # -----------------------------------------------------------------------------
-# resource "terraform_data" "wisdom_ai_prompt_manager" {
+resource "terraform_data" "wisdom_ai_prompt_manager" {
 
-#   triggers_replace = [
-#     awscc_wisdom_assistant.example,
-#     local.prompt_name,
-#     local.prompt_model_id,
-#     filemd5(data.local_file.prompt_txt.filename)
-#   ]
+  triggers_replace = [
+    awscc_wisdom_assistant.example,
+    local.prompt_name,
+    local.prompt_model_id,
+    filemd5(data.local_file.prompt_txt.filename),
+    filemd5("${local.manage_ai_prompt_path}")
+  ]
 
-#   input = {
-#     assistant_id   = awscc_wisdom_assistant.example.assistant_id
-#     model_id       = local.prompt_model_id
-#     region         = var.region
-#     prompt_content = file("${path.module}/prompts/prompt.txt")
-#     prompt_name    = local.prompt_name
-#   }
+  input = {
+    assistant_id   = awscc_wisdom_assistant.example.assistant_id
+    model_id       = local.prompt_model_id
+    region         = var.region
+    prompt_content = file("${path.module}/prompts/prompt.txt")
+    prompt_name    = local.prompt_name
+  }
 
-#   provisioner "local-exec" {
-#     command = "chmod +x ${path.module}/scripts/manage_ai_prompt.sh && ${path.module}/scripts/manage_ai_prompt.sh create"
+  provisioner "local-exec" {
+    command = "chmod +x ${local.manage_ai_prompt_path} && ${local.manage_ai_prompt_path} create"
     
-#     # 스크립트에 환경 변수로 값 전달
-#     environment = {
-#       ASSISTANT_ID   = self.input.assistant_id
-#       MODEL_ID       = self.input.model_id
-#       REGION         = self.input.region
-#       PROMPT_CONTENT = self.input.prompt_content
-#       PROMPT_NAME    = self.input.prompt_name
-#     }
-#   }
+    # 스크립트에 환경 변수로 값 전달
+    environment = {
+      ASSISTANT_ID   = self.input.assistant_id
+      MODEL_ID       = self.input.model_id
+      REGION         = self.input.region
+      PROMPT_CONTENT = self.input.prompt_content
+      PROMPT_NAME    = self.input.prompt_name
+    }
+  }
 
-#   provisioner "local-exec" {
-#     when    = destroy
-#     command = "chmod +x ${path.module}/scripts/manage_ai_prompt.sh && ${path.module}/scripts/manage_ai_prompt.sh delete"
+  provisioner "local-exec" {
+    when    = destroy
+    command = "chmod +x ${local.manage_ai_prompt_path} && ${local.manage_ai_prompt_path} delete"
     
-#     environment = {
-#       ASSISTANT_ID   = self.input.assistant_id
-#       MODEL_ID       = self.input.model_id
-#       REGION         = self.input.region
-#       PROMPT_CONTENT = self.input.prompt_content
-#       PROMPT_NAME    = self.input.prompt_name
-#     }
-#   }
-# }
+    environment = {
+      ASSISTANT_ID   = self.input.assistant_id
+      MODEL_ID       = self.input.model_id
+      REGION         = self.input.region
+      PROMPT_CONTENT = self.input.prompt_content
+      PROMPT_NAME    = self.input.prompt_name
+    }
+  }
+
+  depends_on = [
+    awscc_wisdom_assistant.example
+  ]
+}
 
 
 # data "external" "wisdom_ai_prompt" {

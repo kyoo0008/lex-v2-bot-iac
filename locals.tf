@@ -44,4 +44,7 @@ locals {
 
 
   content_path = "${path.module}/QiCContent"
+
+  kb_script_path = "${path.module}/scripts/manage_knowledge_base.sh"
+  manage_ai_prompt_path = "${path.module}/scripts/manage_ai_prompt.sh"
 }

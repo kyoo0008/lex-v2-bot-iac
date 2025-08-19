@@ -9,7 +9,8 @@ resource "terraform_data" "knowledge_base_manager" {
     local.kb_name,
     awscc_kms_key.example,
     local.content_path,
-    sha1(join("", [for f in fileset("${local.content_path}", "*"): filesha1("${local.content_path}/${f}")]))
+    sha1(join("", [for f in fileset("${local.content_path}", "*"): filesha1("${local.content_path}/${f}")])),
+    filemd5("${local.kb_script_path}")
   ]
 
   input = {
@@ -22,7 +23,7 @@ resource "terraform_data" "knowledge_base_manager" {
   }
 
   provisioner "local-exec" {
-    command = "chmod +x ${path.module}/scripts/manage_knowledge_base.sh && ${path.module}/scripts/manage_knowledge_base.sh create"
+    command = "chmod +x ${local.kb_script_path} && ${local.kb_script_path} create"
     
     # 스크립트에 환경 변수로 값 전달
     environment = {
@@ -37,7 +38,7 @@ resource "terraform_data" "knowledge_base_manager" {
 
   provisioner "local-exec" {
     when    = destroy
-    command = "chmod +x ${path.module}/scripts/manage_knowledge_base.sh && ${path.module}/scripts/manage_knowledge_base.sh delete"
+    command = "chmod +x ${local.kb_script_path} && ${local.kb_script_path} delete"
     
     environment = {
       KMS_KEY_ID_ARN = self.input.kms_key_id_arn
