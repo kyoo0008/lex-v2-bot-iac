@@ -6,9 +6,15 @@ ACTION="$1"
 
 # 환경 변수에서 Terraform 값들을 가져옵니다.
 # ASSISTANT_ID, PROMPT_NAME, MODEL_ID, REGION, PROMPT_CONTENT
-if [ -z "$ASSISTANT_ID" ] || [ -z "$PROMPT_NAME" ]; then
+if [ -z "$ASSISTANT_ID" ] || [ -z "$PROMPT_NAME" ] || [ -z "$PROMPT_TYPE" ]; then
   echo "Error: Required environment variables are not set."
   exit 1
+fi
+
+if [ $PROMPT_TYPE == "QUERY_REFORMULATION" ]; then
+  PROMPT_API_FORMAT="MESSAGES"
+else
+  PROMPT_API_FORMAT="TEXT_COMPLETIONS"
 fi
 
 # --- 공통 함수: AI 프롬프트 삭제 ---
@@ -43,13 +49,15 @@ create_prompt() {
     --arg promptName "$PROMPT_NAME" \
     --arg promptContent "$PROMPT_CONTENT" \
     --arg modelId "$MODEL_ID" \
+    --arg promptType "$PROMPT_TYPE" \
+    --arg promptApiFormat "$PROMPT_API_FORMAT" \
     '{
       "assistantId": $assistantId,
       "name": $promptName,
-      "apiFormat": "TEXT_COMPLETIONS",
+      "apiFormat": $promptApiFormat,
       "modelId": $modelId,
       "templateType": "TEXT",
-      "type": "ANSWER_GENERATION",
+      "type": $promptType,
       "visibilityStatus": "PUBLISHED",
       "templateConfiguration": {
         "textFullAIPromptEditTemplateConfiguration": {

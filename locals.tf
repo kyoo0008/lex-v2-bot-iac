@@ -32,8 +32,7 @@ locals {
   files_to_exclude        = toset(concat([local.relative_intent_path], [for f in local.all_source_files : f if endswith(f, ".DS_Store")]))
   unmodified_source_files = setsubtract(local.all_source_files, local.files_to_exclude)
 
-  prompt_name = "example_text_completion_ai_prompt"
-  prompt_model_id = "apac.amazon.nova-micro-v1:0"
+  
 
   # 다중 locale 처리 필요
   agent_name = "example_ai_agent_test"
@@ -45,6 +44,7 @@ locals {
 
   content_path = "${path.module}/QiCContent"
 
-  kb_script_path = "${path.module}/scripts/manage_knowledge_base.sh"
-  manage_ai_prompt_path = "${path.module}/scripts/manage_ai_prompt.sh"
+  answer_generation_prompt_name = "example_answer_generation_prompt"
+  query_reformulation_prompt_name = "example_query_reformulation_prompt"
+  prompt_model_id = "apac.amazon.nova-micro-v1:0" 
 }

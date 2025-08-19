@@ -70,26 +70,27 @@
 # # -----------------------------------------------------------------------------
 # # Manage AI Prompt 
 # # -----------------------------------------------------------------------------
-resource "terraform_data" "wisdom_ai_prompt_manager" {
+resource "terraform_data" "ai_prompt_answer_generation_manager" {
 
   triggers_replace = [
     awscc_wisdom_assistant.example,
-    local.prompt_name,
+    local.answer_generation_prompt_name,
     local.prompt_model_id,
-    filemd5(data.local_file.prompt_txt.filename),
-    filemd5("${local.manage_ai_prompt_path}")
+    filemd5(data.local_file.answer_generation_prompt_txt.filename),
+    filemd5("${path.module}/scripts/manage_ai_prompt.sh")
   ]
 
   input = {
     assistant_id   = awscc_wisdom_assistant.example.assistant_id
     model_id       = local.prompt_model_id
     region         = var.region
-    prompt_content = file("${path.module}/prompts/prompt.txt")
-    prompt_name    = local.prompt_name
+    prompt_content = file(data.local_file.answer_generation_prompt_txt.filename)
+    prompt_name    = local.answer_generation_prompt_name
+    prompt_type    = "ANSWER_GENERATION"
   }
 
   provisioner "local-exec" {
-    command = "chmod +x ${local.manage_ai_prompt_path} && ${local.manage_ai_prompt_path} create"
+    command = "chmod +x ${path.module}/scripts/manage_ai_prompt.sh && ${path.module}/scripts/manage_ai_prompt.sh create"
     
     # 스크립트에 환경 변수로 값 전달
     environment = {
@@ -98,12 +99,13 @@ resource "terraform_data" "wisdom_ai_prompt_manager" {
       REGION         = self.input.region
       PROMPT_CONTENT = self.input.prompt_content
       PROMPT_NAME    = self.input.prompt_name
+      PROMPT_TYPE    = self.input.prompt_type
     }
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "chmod +x ${local.manage_ai_prompt_path} && ${local.manage_ai_prompt_path} delete"
+    command = "chmod +x ${path.module}/scripts/manage_ai_prompt.sh && ${path.module}/scripts/manage_ai_prompt.sh delete"
     
     environment = {
       ASSISTANT_ID   = self.input.assistant_id
@@ -111,6 +113,61 @@ resource "terraform_data" "wisdom_ai_prompt_manager" {
       REGION         = self.input.region
       PROMPT_CONTENT = self.input.prompt_content
       PROMPT_NAME    = self.input.prompt_name
+      PROMPT_TYPE    = self.input.prompt_type
+    }
+  }
+
+  depends_on = [
+    awscc_wisdom_assistant.example
+  ]
+}
+
+
+
+resource "terraform_data" "ai_prompt_query_reformulation_manager" {
+
+  triggers_replace = [
+    awscc_wisdom_assistant.example,
+    local.query_reformulation_prompt_name,
+    local.prompt_model_id,
+    filemd5(data.local_file.query_reformulation_prompt_txt.filename),
+    filemd5("${path.module}/scripts/manage_ai_prompt.sh")
+  ]
+
+  input = {
+    assistant_id   = awscc_wisdom_assistant.example.assistant_id
+    model_id       = local.prompt_model_id
+    region         = var.region
+    prompt_content = file(data.local_file.query_reformulation_prompt_txt.filename)
+    prompt_name    = local.query_reformulation_prompt_name
+    prompt_type    = "QUERY_REFORMULATION"
+  }
+
+  provisioner "local-exec" {
+    command = "chmod +x ${path.module}/scripts/manage_ai_prompt.sh && ${path.module}/scripts/manage_ai_prompt.sh create"
+    
+    # 스크립트에 환경 변수로 값 전달
+    environment = {
+      ASSISTANT_ID   = self.input.assistant_id
+      MODEL_ID       = self.input.model_id
+      REGION         = self.input.region
+      PROMPT_CONTENT = self.input.prompt_content
+      PROMPT_NAME    = self.input.prompt_name
+      PROMPT_TYPE    = self.input.prompt_type
+    }
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "chmod +x ${path.module}/scripts/manage_ai_prompt.sh && ${path.module}/scripts/manage_ai_prompt.sh delete"
+    
+    environment = {
+      ASSISTANT_ID   = self.input.assistant_id
+      MODEL_ID       = self.input.model_id
+      REGION         = self.input.region
+      PROMPT_CONTENT = self.input.prompt_content
+      PROMPT_NAME    = self.input.prompt_name
+      PROMPT_TYPE    = self.input.prompt_type
     }
   }
 
