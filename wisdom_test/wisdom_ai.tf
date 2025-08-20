@@ -2,7 +2,7 @@
 resource "awscc_wisdom_assistant" "locale_assistants" {
   for_each = toset(local.locales)
 
-  name = "aicc-${local.env}-qconnect-assistant-${each.key}" # 예: qconnect-assistant-ko_KR
+  name = "${local.wisdom_assistant_prefix}-${each.key}" # 예: qconnect-assistant-ko_KR
   type = "AGENT"
   server_side_encryption_configuration = {
     kms_key_id = data.aws_kms_key.example.arn
