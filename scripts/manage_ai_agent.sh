@@ -5,13 +5,11 @@ set -e # 스크립트 실행 중 오류가 발생하면 즉시 중단
 ACTION="$1"
 
 # 환경 변수에서 Terraform 값들을 가져옵니다.
-# ASSISTANT_ID, AGENT_NAME, PROMPT_NAME, REGION, AGENT_TYPE, LOCALE
-if [ -z "$ASSISTANT_ID" ] || [ -z "$AGENT_NAME" ] || [ -z "$PROMPT_NAME" ] || [ -z "$AGENT_TYPE" ] || [ -z "$LOCALE" ]; then
+# ASSISTANT_ID, AGENT_NAME, PROMPT_ID, REGION, AGENT_TYPE, LOCALE
+if [ -z "$ASSISTANT_ID" ] || [ -z "$AGENT_NAME" ]; then
   echo "Error: Required environment variables are not set."
   exit 1
 fi
-
-PROMPT_ID=$(aws qconnect list-ai-prompts --assistant-id "$ASSISTANT_ID" --query "aiPromptSummaries[?name=='$PROMPT_NAME']" | jq -r '.[0].aiPromptId')
 
 # --- 공통 함수: AI 프롬프트 삭제 ---
 delete_agent() {
@@ -36,7 +34,6 @@ delete_agent() {
 }
 
 # --- 공통 함수: AI 프롬프트 생성 ---
-# To-do : Manual Search Type도 동적으로 할당 할 수 있도록 분기
 upsert_agent() {
   echo "Creating new AI Agent '$AGENT_NAME'..."
   # echo "ASSISTANT_ID : $ASSISTANT_ID / AGENT_NAME : $AGENT_NAME / AGENT_TYPE : $AGENT_TYPE / PROMPT_ID : $PROMPT_ID / LOCALE : $LOCALE"

@@ -1,5 +1,4 @@
 locals {
-  env = "dev" # stg,prd
   # 압축할 최상위 소스 폴더 이름 정의
   lex_source_root_folder = "qic-test-bot-DRAFT-9BZCNEJHKK-LexJson"
   lex_bot_name = "qic-test-bot"
@@ -38,9 +37,8 @@ locals {
   # 다중 locale 처리 필요
   agent_name = "example_ai_agent_test"
    #[en_US, en_GB, en_AU, en_NZ, en_IE, en_ZA, en_IN, en_CY, en_SG, es_ES, es_MX, es_US, fr_FR, fr_BE, fr_CA, de_DE, de_AT, de_CH, it_IT, pt_BR, pt_PT, ca_ES, zh_HK, zh_CN, ja_JP, ko_KR, ar_AE, ar, nl_BE, nl_NL, fi_FI, da_DK, no_NO, sv_SE, is_IS, hi_IN, pl_PL, ro_RO, ru_RU, cs_CZ, sk_SK, hu_HU, sr_RS, lt_LT, lv_LV, et_EE, sl_SI, bg_BG, cy_GB, id_ID, th_TH, ms_MY, tl_PH, vi_VN, km_KH, hmn, lo_LA, zu_ZA, xh_ZA, af_ZA, fa_IR, he_IL, ga_IE, hy_AM, tr_TR]
-  locales = ["en_US","ko_KR"]
+  locale = "en_US" 
   agent_type = "ANSWER_RECOMMENDATION"
-
 
 
 
@@ -49,27 +47,4 @@ locals {
   answer_generation_prompt_name = "example_answer_generation_prompt"
   query_reformulation_prompt_name = "example_query_reformulation_prompt"
   prompt_model_id = "apac.amazon.nova-micro-v1:0" 
-  delete_flag = "false"
-
-  prompt_files = {
-    answer_generation   = "${path.module}/prompts/answer_generation_prompt.txt"
-    query_reformulation = "${path.module}/prompts/query_reformulation_prompt.txt"
-  }
-
-  prompt_configs = {
-    answer_generation = {
-      prompt_name_local = local.answer_generation_prompt_name
-      prompt_file_data  = data.local_file.prompts["answer_generation"]
-      prompt_type       = "ANSWER_GENERATION"
-    },
-    query_reformulation = {
-      prompt_name_local = local.query_reformulation_prompt_name
-      prompt_file_data  = data.local_file.prompts["query_reformulation"]
-      prompt_type       = "QUERY_REFORMULATION"
-    }
-  }
-
-
 }
-
-
