@@ -10,35 +10,39 @@ data "aws_caller_identity" "current" {}
 # -----------------------------------------------------------------------------
 # KMS 키 생성 (암호화용)
 # -----------------------------------------------------------------------------
-resource "awscc_kms_key" "example" {
-  description = "Example KMS key for Amazon Q in Connect"
-  enabled     = true
-  key_policy  = jsonencode({
-    Version   = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Principal = {
-            Service = "connect.amazonaws.com"
-        },
-        Action = [
-            "kms:Decrypt",
-            "kms:GenerateDataKey*",
-            "kms:DescribeKey"
-        ],
-        Resource = "*"
-    }
-    ]
-  })
+# resource "awscc_kms_key" "example" {
+#   description = "Example KMS key for Amazon Q in Connect"
+#   enabled     = true
+#   key_policy  = jsonencode({
+#     Version   = "2012-10-17"
+#     Statement = [
+#       {
+#         Sid    = "Enable IAM User Permissions"
+#         Effect = "Allow"
+#         Principal = {
+#           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#         }
+#         Action   = "kms:*"
+#         Resource = "*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Principal = {
+#             Service = "connect.amazonaws.com"
+#         },
+#         Action = [
+#             "kms:Decrypt",
+#             "kms:GenerateDataKey*",
+#             "kms:DescribeKey"
+#         ],
+#         Resource = "*"
+#     }
+#     ]
+#   })
+# }
+
+data "aws_kms_key" "example" {
+  key_id = "alias/amazon-q-in-connect-key"
 }
 
 # -----------------------------------------------------------------------------
@@ -50,7 +54,7 @@ resource "awscc_wisdom_assistant" "example" {
   description = "Example assistant for Amazon Q in Connect"
 
   server_side_encryption_configuration = {
-    kms_key_id = awscc_kms_key.example.arn
+    kms_key_id = data.aws_kms_key.example.arn
   }
 
   tags = [{
