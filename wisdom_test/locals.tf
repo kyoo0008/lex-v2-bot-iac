@@ -92,4 +92,7 @@ locals {
   # prod 환경일 경우, 배포 담당자가 생성한 설정 파일을 읽어옴
   deployment_config = local.env == "prod" ? jsondecode(file("${path.module}/deployment_vars.json")) : {}
   wisdom_assistant_prefix = "aicc-${local.env}-qconnect-assistant"
+
+
+  content_path = "${path.module}/QiCContent"
 }

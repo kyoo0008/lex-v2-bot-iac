@@ -7,19 +7,18 @@ resource "terraform_data" "knowledge_base_manager" {
 
   triggers_replace = [
     each.value,
-    local.kb_name,
-    awscc_kms_key.example,
+    data.aws_kms_key.example,
     local.content_path,
-    sha1(join("", [for f in fileset("${local.content_path}", "*"): filesha1("${local.content_path}/${f}")])),
+    sha1(join("", [for f in fileset("${local.content_path}/${each.key}", "*"): filesha1("${local.content_path}/${each.key}/${f}")])),
     filemd5("${path.module}/scripts/manage_knowledge_base.sh")
   ]
 
   input = {
     assistant_arn   = each.value.assistant_arn
     region         = var.region
-    knowledge_base_name    = local.kb_name
-    kms_key_id_arn   = awscc_kms_key.example.arn
-    content_path = local.content_path
+    knowledge_base_name    = "${each.value.name}_kb"
+    kms_key_id_arn   = data.aws_kms_key.example.arn
+    content_path = "${local.content_path}/${each.key}"
     connect_instance_id = data.aws_connect_instance.connect_instance.id
   }
 
@@ -52,8 +51,8 @@ resource "terraform_data" "knowledge_base_manager" {
   }
 
   depends_on = [
-    awscc_kms_key.example,
-    awscc_wisdom_assistant.example
+    data.aws_kms_key.example,
+    awscc_wisdom_assistant.locale_assistants
   ]
 }
 

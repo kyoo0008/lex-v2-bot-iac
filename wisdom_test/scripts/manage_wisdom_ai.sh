@@ -8,13 +8,6 @@ if [ -z "$ASSISTANT_ID" ] || [ -z "$MODEL_ID" ] || [ -z "$REGION" ] || [ -z "$LO
   exit 1
 fi
 
-# 프롬프트 이름과 'ID:버전'을 매핑하기 위한 전역 연관 배열
-# declare -r PROMPT_IDS
-# PROMPT_IDS
-# ==============================================================================
-# Helper Functions
-# ==============================================================================
-
 # 프롬프트의 최신 DRAFT 버전을 기반으로 새로운 버전을 생성하고, 그 버전 번호를 반환합니다.
 create_prompt_version() {
   local prompt_id="$1"
@@ -50,7 +43,6 @@ create_agent_version() {
     return 1
   fi
 
-  # echo "Creating a new version for agent ID '$agent_id'..."
   local version_info
   version_info=$(aws qconnect create-ai-agent-version \
     --region "$REGION" \
@@ -144,13 +136,9 @@ main() {
   echo "== Running in $ENV mode for ASSISTANT_ID: $ASSISTANT_ID =="
   local ansgen_prompt_id_version
   local preproc_prompt_id_version
+  
   # 2. 모든 프롬프트를 생성/업데이트합니다.
   while IFS= read -r prompt_obj; do
-    # dev_upsert_prompt \
-    #   "$(echo "$prompt_obj" | jq -r '.prompt_name')" \
-    #   "$(echo "$prompt_obj" | jq -r '.prompt_content')" \
-    #   "$(echo "$prompt_obj" | jq -r '.prompt_type')" \
-    #   "$(echo "$prompt_obj" | jq -r '.prompt_api_format')"
     prompt_name="$(echo "$prompt_obj" | jq -r '.prompt_name')" 
     prompt_content="$(echo "$prompt_obj" | jq -r '.prompt_content')" 
     prompt_type="$(echo "$prompt_obj" | jq -r '.prompt_type')" 

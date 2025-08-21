@@ -1,3 +1,5 @@
+# To-do : QiC Logging 활성화 
+
 # 로케일별 Assistant 생성
 resource "awscc_wisdom_assistant" "locale_assistants" {
   for_each = toset(local.locales)

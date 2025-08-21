@@ -10,6 +10,8 @@ if [ -z "$KMS_KEY_ID_ARN" ] || [ -z "$CONTENT_PATH" ] || [ -z "$KNOWLEDGE_BASE_N
   exit 1
 fi
 
+# To-do : Connect Instance <-> ASSISTANT, KB Association
+
 ASSISTANT_ID=$(echo "$ASSISTANT_ARN" | awk -F'/' '{print $NF}')
 
 delete_connect_associations_by_type() {
@@ -179,8 +181,8 @@ delete_knowledge_base() {
     echo "KnowledgeBase not found, skipping deletion."
   fi
 
-  delete_connect_associations_by_type "WISDOM_ASSISTANT"
-  delete_connect_associations_by_type "WISDOM_KNOWLEDGE_BASE"
+  # delete_connect_associations_by_type "WISDOM_ASSISTANT"
+  # delete_connect_associations_by_type "WISDOM_KNOWLEDGE_BASE"
   delete_assistant_associations
 }
 
@@ -214,8 +216,8 @@ create_knowledge_base() {
   
   start_content_upload $CREATED_KNOWLEDGE_BASE_ID
   create_assistant_associations $CREATED_KNOWLEDGE_BASE_ID
-  create_connect_association "WISDOM_ASSISTANT" "$ASSISTANT_ARN"
-  create_connect_association "WISDOM_KNOWLEDGE_BASE" "$CREATED_KNOWLEDGE_BASE_ARN"
+  # create_connect_association "WISDOM_ASSISTANT" "$ASSISTANT_ARN"
+  # create_connect_association "WISDOM_KNOWLEDGE_BASE" "$CREATED_KNOWLEDGE_BASE_ARN"
   
 }
 

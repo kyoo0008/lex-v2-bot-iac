@@ -6,3 +6,7 @@ data "local_file" "prompts" {
   for_each = local.prompt_files
   filename = each.value
 }
+
+data "aws_connect_instance" "connect_instance" {
+  instance_alias = var.connect_instance_alias
+}
