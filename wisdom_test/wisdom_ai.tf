@@ -1,3 +1,4 @@
+# To-do : prompt yaml translator
 # To-do : QiC Logging 활성화 
 
 # 로케일별 Assistant 생성
@@ -26,14 +27,15 @@ resource "awscc_wisdom_assistant" "locale_assistants" {
 resource "terraform_data" "wisdom_ai_manager" {
   for_each = awscc_wisdom_assistant.locale_assistants
 
+  
   triggers_replace = [
     each.value,
     local.prompt_model_id,
     filemd5("${path.module}/scripts/manage_wisdom_ai.sh"),
-    local.agent_configs,
+    jsonencode(local.agent_configs), # jsonencode로 변경하여 map 순서에 따른 불필요한 변경 방지
     local.env,
-    # env에 따라 트리거 소스를 변경
-    md5(local.env == "dev" ? jsonencode(local.dev_prompts_list) : file("${path.module}/deployment_vars.json"))
+    # env에 따라 트리거 소스를 변경합니다. dev 환경에서는 모든 프롬프트 파일 내용의 해시를 사용합니다.
+    md5(local.env == "dev" ? jsonencode({ for k, v in data.local_file.prompts : k => v.content_base64 }) : file("${path.module}/deployment_vars.json"))
   ]
 
   input = {
@@ -44,12 +46,24 @@ resource "terraform_data" "wisdom_ai_manager" {
     locale         = each.key # for_each의 key가 로케일
     env            = local.env,
     
-    # env에 따라 다른 프롬프트 정보를 JSON으로 전달
-    prompts_json   = local.env == "dev" ? jsonencode(local.dev_prompts_list) : jsonencode(lookup(local.deployment_config, each.key, {prompts = []}).prompts)
+    agents_json = jsonencode(local.agent_configs)
+
+    prompts_json = local.env == "dev" ? jsonencode([
+      for key, config in local.prompt_configs : {
+        prompt_name       = config.prompt_name_local
+        # "ko_KR.self_service_pre_processing" 형식의 키를 사용하여 로케일에 맞는 파일 내용을 찾습니다.
+        prompt_content    = data.local_file.prompts["${each.key}.${key}"].content
+        prompt_type       = config.prompt_type
+        prompt_api_format = config.prompt_api_format
+        use_flag          = config.use_flag
+      }
+    ]) : jsonencode(lookup(local.deployment_config, each.key, { prompts = [] }).prompts)
+
     # prod 환경에서는 guardrail 정보도 전달 (예시)
     guardrails_json = local.env == "prod" ? jsonencode(lookup(local.deployment_config, each.key, {guardrails = []}).guardrails) : "[]"
 
-    agents_json = jsonencode(local.agent_configs)
+
+    
   }
 
   provisioner "local-exec" {

@@ -181,8 +181,10 @@ delete_knowledge_base() {
     echo "KnowledgeBase not found, skipping deletion."
   fi
 
-  # delete_connect_associations_by_type "WISDOM_ASSISTANT"
-  # delete_connect_associations_by_type "WISDOM_KNOWLEDGE_BASE"
+  # if [ "$LOCALE" == "$CONNECT_ASSOCIATION_LOCALE" ]; then
+  #   delete_connect_associations_by_type "WISDOM_ASSISTANT"
+  #   delete_connect_associations_by_type "WISDOM_KNOWLEDGE_BASE"
+  # fi
   delete_assistant_associations
 }
 
@@ -216,8 +218,10 @@ create_knowledge_base() {
   
   start_content_upload $CREATED_KNOWLEDGE_BASE_ID
   create_assistant_associations $CREATED_KNOWLEDGE_BASE_ID
-  # create_connect_association "WISDOM_ASSISTANT" "$ASSISTANT_ARN"
-  # create_connect_association "WISDOM_KNOWLEDGE_BASE" "$CREATED_KNOWLEDGE_BASE_ARN"
+  # if [ "$LOCALE" == "$CONNECT_ASSOCIATION_LOCALE" ]; then
+  #   create_connect_association "WISDOM_ASSISTANT" "$ASSISTANT_ARN"
+  #   create_connect_association "WISDOM_KNOWLEDGE_BASE" "$CREATED_KNOWLEDGE_BASE_ARN"
+  # fi
   
 }
 

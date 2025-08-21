@@ -10,7 +10,7 @@ resource "terraform_data" "knowledge_base_manager" {
     data.aws_kms_key.example,
     local.content_path,
     sha1(join("", [for f in fileset("${local.content_path}/${each.key}", "*"): filesha1("${local.content_path}/${each.key}/${f}")])),
-    filemd5("${path.module}/scripts/manage_knowledge_base.sh")
+    filemd5("${path.module}/scripts/manage_knowledge_base.sh"),
   ]
 
   input = {

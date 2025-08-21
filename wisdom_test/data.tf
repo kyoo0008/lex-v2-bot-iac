@@ -2,8 +2,9 @@ data "aws_kms_key" "example" {
   key_id = "alias/amazon-q-in-connect-key"
 }
 
+
 data "local_file" "prompts" {
-  for_each = local.prompt_files
+  for_each = local.locale_prompt_files_map
   filename = each.value
 }
 
