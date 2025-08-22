@@ -1,5 +1,5 @@
 # To-do : 다른 assistant, locale 끼리의 session 처리는 어떻게 할 것인지 고민...=>Flow setContactData 에서 wisdomSessionArn을 설정하여 Lex로 넘겨줌 => lambda로 구현??
-# To-do : prompt yaml translator
+# To-do : prompt yaml translator, validator
 # To-do : QiC Logging 활성화 
 
 # 로케일별 Assistant 생성
