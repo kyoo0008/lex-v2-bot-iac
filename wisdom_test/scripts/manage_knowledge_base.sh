@@ -61,7 +61,6 @@ delete_assistant_associations() {
   fi
 
 }
-
 start_content_upload() {
   KNOWLEDGE_BASE_ID=$1
   # ================================================================================
@@ -75,6 +74,24 @@ start_content_upload() {
   find "$CONTENT_PATH" -type f \( -name "*.docx" -o -name "*.txt" \) | while read -r FILE_PATH; do
     echo "--------------------------------------------------"
     echo "Processing file: $FILE_PATH"
+
+    # 파일 크기 확인
+    # 1MB를 바이트 단위로 정의 (1024 * 1024)
+    MAX_SIZE_BYTES=1048576
+    
+    # stat 명령어를 사용하여 파일 크기를 바이트 단위로 가져옵니다.
+    # (macOS/BSD의 경우 stat -f%z "$FILE_PATH")
+    # FILE_SIZE=$(stat -c%s "$FILE_PATH")
+    FILE_SIZE=$(stat -f%z "$FILE_PATH")
+    
+
+    if [ "$FILE_SIZE" -gt "$MAX_SIZE_BYTES" ]; then
+      # 파일 크기를 MB 단위로 변환하여 사용자에게 보여주기 (소수점 2자리)
+      FILE_SIZE_MB=$(awk -v size="$FILE_SIZE" 'BEGIN { printf "%.2f", size / 1024 / 1024 }')
+      echo "Skipping file '$FILE_PATH'. Size (${FILE_SIZE_MB}MB) exceeds 1MB limit."
+      continue # 현재 파일 처리를 건너뛰고 다음 파일로 넘어갑니다.
+    fi
+    # --- 로직 추가 끝 ---
 
     CONTENT_TYPE=""
     if [[ "$FILE_PATH" == *.docx ]]; then
@@ -100,15 +117,10 @@ start_content_upload() {
 
     # AWS가 요구하는 헤더 정보를 JSON으로 추출
     CONTENT_TYPE=$(echo "$UPLOAD_INFO_JSON" | jq -r '.headersToInclude["content-type"]')
-
     HOST=$(echo "$UPLOAD_INFO_JSON" | jq -r '.headersToInclude["host"]')
-
     X_AMZ_ACL=$(echo "$UPLOAD_INFO_JSON" | jq -r '.headersToInclude["x-amz-acl"]')
-
     X_AMZ_SERVER_SIDE_ENCRYPTION=$(echo "$UPLOAD_INFO_JSON" | jq -r '.headersToInclude["x-amz-server-side-encryption"]')
-
     X_AMZ_SERVER_SIDE_ENCRYPTION_AWS_KMS_KEY_ID=$(echo "$UPLOAD_INFO_JSON" | jq -r '.headersToInclude["x-amz-server-side-encryption-aws-kms-key-id"]')
-
     X_AMZ_SERVER_SIDE_ENCRYPTION_CONTEXT=$(echo "$UPLOAD_INFO_JSON" | jq -r '.headersToInclude["x-amz-server-side-encryption-context"]')
 
     
