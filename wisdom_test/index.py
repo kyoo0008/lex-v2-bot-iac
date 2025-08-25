@@ -3,7 +3,7 @@ import json
 import boto3
 import json
 
-def lambda_handler(event, context):
+def handler(event, context):
 
     # amazon qconnect create session
     client = boto3.client('qconnect', region_name='ap-northeast-2')

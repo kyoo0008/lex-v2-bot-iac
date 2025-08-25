@@ -88,6 +88,61 @@ locals {
   deployment_config = local.env == "prod" ? jsondecode(file("${path.module}/deployment_vars.json")) : {}
   wisdom_assistant_prefix = "aicc-${local.env}-qconnect-assistant"
 
+  lex_bot_log_group_name = "/aws/lex/QicBot" 
+
 
   content_path = "${path.module}/QiCContent"
+  
+  ##########################################################################################
+  # LEX
+  ##########################################################################################
+  # 압축할 최상위 소스 폴더 이름 정의
+  lex_source_root_folder = "qic-bot"
+  lex_bot_name           = "qic-test-bot"
+  # 실제 파일 시스템에서의 전체 경로
+  full_source_root_path = "${var.project_root_path}${local.lex_source_root_folder}"
+
+  # 동적으로 생성된 ARN으로 덮어쓸 부분 정의
+  # new_q_in_connect_config = {
+  #   qInConnectIntentConfiguration = {
+  #     qInConnectAssistantConfiguration = {
+  #       assistantArn = awscc_wisdom_assistant.example.assistant_arn
+  #     }
+  #   }
+  # }
+
+  intent_data_by_locale = {
+    for locale in local.locales : locale => {
+      # 1. 각 로케일별 Intent 파일의 상대 경로를 정의
+      relative_path = "${local.lex_bot_name}/BotLocales/${locale}/Intents/AmazonQinConnect/Intent.json"
+
+      # 2. 수정된 최종 JSON 문자열을 생성
+      # 모든 계산을 jsonencode 함수 내에서 한 번에 처리하여 순환 참조를 방지합니다.
+      modified_json_string = jsonencode(merge(
+        # 2a. 원본 JSON 파일을 읽고 파싱
+        jsondecode(file("${local.full_source_root_path}/${local.lex_bot_name}/BotLocales/${locale}/Intents/AmazonQinConnect/Intent.json")),
+        
+        # 2b. 삽입할 새로운 설정을 정의 (Wisdom Assistant ARN을 동적으로 참조)
+        {
+          qInConnectIntentConfiguration = {
+            qInConnectAssistantConfiguration = {
+              assistantArn = awscc_wisdom_assistant.locale_assistants[locale].assistant_arn
+            }
+          }
+        }
+      ))
+    }
+  }
+
+  # 파일 필터링 로직
+  all_source_files = fileset(local.full_source_root_path, "**/*")
+  
+  # [수정됨] 제외할 파일 목록에 모든 로케일의 Intent 경로를 동적으로 추가
+  files_to_exclude = toset(concat(
+    [for data in local.intent_data_by_locale : data.relative_path],
+    [for f in local.all_source_files : f if endswith(f, ".DS_Store")]
+  ))
+  
+  unmodified_source_files = setsubtract(local.all_source_files, local.files_to_exclude)
+  
 }

@@ -22,7 +22,7 @@ locals {
       }
     }
   }
-  kb_name = "example-knowledge-base-test"
+  
   # 원본과 새로운 설정 병합
   modified_intent_data        = merge(local.original_intent_data, local.new_q_in_connect_config)
   modified_intent_json_string = jsonencode(local.modified_intent_data)
@@ -32,7 +32,7 @@ locals {
   files_to_exclude        = toset(concat([local.relative_intent_path], [for f in local.all_source_files : f if endswith(f, ".DS_Store")]))
   unmodified_source_files = setsubtract(local.all_source_files, local.files_to_exclude)
 
-  
+  kb_name = "example-knowledge-base-test"
 
   # 다중 locale,agent_type 처리 필요
   agent_name = "example_ai_agent_test"
