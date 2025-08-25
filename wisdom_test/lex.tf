@@ -160,7 +160,7 @@ resource "aws_cloudwatch_log_group" "lex_bot" {
   # retention_in_days = 14
 }
 
-# lmd_summarize_transcript 모듈 호출
+
 module "lmd_lex_hook_func" {
   source = "./modules/terraform-aicc-lmd-python"
 
@@ -186,4 +186,37 @@ module "lmd_lex_hook_func" {
 
   
   # func_inline_policy_json = {}
+}
+
+
+resource "terraform_data" "associate_bot" {
+  triggers_replace = [
+    awscc_lex_bot_alias.example,
+    awscc_lex_bot_version.bot_new_version
+  ]
+
+  input = {
+    connect_instance_id = data.aws_connect_instance.connect_instance.id
+    bot_alias_arn = awscc_lex_bot_alias.example.arn
+    region         = var.region
+  }
+
+  
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command = "chmod +x ${path.module}/scripts/associate_bot.sh && ${path.module}/scripts/associate_bot.sh"
+    environment = {
+      CONNECT_INSTANCE_ID = self.input.connect_instance_id
+      BOT_ALIAS_ARN = self.input.bot_alias_arn
+      REGION = self.input.region
+    }
+  }
+
+  depends_on = [
+    aws_lexv2models_bot.bot,
+    awscc_lex_bot_alias.example,
+    awscc_lex_bot_version.bot_new_version
+  ]
+
 }
