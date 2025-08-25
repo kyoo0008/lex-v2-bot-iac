@@ -93,6 +93,18 @@ locals {
 
   content_path = "${path.module}/QiCContent"
   
+  qic_create_session = {
+    name = "qic-create-sessions-func"
+    desc = "QiC Create Session by Locale ID, Contact ID"
+  }
+
+  lex_hook_func = {
+    name = "lex-hook-func"
+    desc = "Lex Hook Function"
+  }
+  boundary = "qic-test-boundary"
+  
+
   ##########################################################################################
   # LEX
   ##########################################################################################
@@ -121,7 +133,6 @@ locals {
       modified_json_string = jsonencode(merge(
         # 2a. 원본 JSON 파일을 읽고 파싱
         jsondecode(file("${local.full_source_root_path}/${local.lex_bot_name}/BotLocales/${locale}/Intents/AmazonQinConnect/Intent.json")),
-        
         # 2b. 삽입할 새로운 설정을 정의 (Wisdom Assistant ARN을 동적으로 참조)
         {
           qInConnectIntentConfiguration = {

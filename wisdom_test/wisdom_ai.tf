@@ -87,76 +87,112 @@ resource "terraform_data" "wisdom_ai_manager" {
     awscc_wisdom_assistant.locale_assistants
   ]
 }
-resource "aws_iam_policy" "allow_wisdom" {
-  name = "allow_wisdom_policy"
 
-  policy = jsonencode({
+# lmd_summarize_transcript 모듈 호출
+module "lmd_qic_create_sessions" {
+  source = "./modules/terraform-aicc-lmd-python"
+
+  application      = var.application
+  boundary         = local.boundary
+  env              = local.env
+  func_name        = local.qic_create_session.name
+  func_description = local.qic_create_session.desc
+
+  func_source_path     = "task/lambda_function/${local.qic_create_session.name}/src"
+  func_source_zip_path = "task/lambda_function/${local.qic_create_session.name}.zip"
+
+  func_environment_variables = {
+    # ENV               = var.env
+  }
+
+  func_architecture    = ["x86_64"]
+  func_runtime         = "python3.13"
+  func_timeout         = 600
+  func_memory_size_mb  = 128
+  func_storage_size_mb = 512
+  func_tracing_mode    = "PassThrough"
+
+  
+  func_inline_policy_json = {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid      = "AllowWisdom"
         Action   = ["wisdom:*"]
         Effect   = "Allow"
-        Resource = "*"
-      },
-    ]
-  })
-}
-resource "awscc_iam_role" "example" {
-  description = "AWS IAM role for lambda function"
-  assume_role_policy_document = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
+        Resource = ["*"]
       }
     ]
-  })
-
-  managed_policy_arns         = [aws_iam_policy.allow_wisdom.arn]
-
-}
-
-data "archive_file" "example" {
-  type        = "zip"
-  source_file = "index.py"
-  output_path = "lambda_function_payload.zip"
-}
-
-resource "awscc_s3_bucket" "lambda_assets" {
-}
-
-resource "aws_s3_object" "zip" {
-  source = data.archive_file.example.output_path
-  bucket = awscc_s3_bucket.lambda_assets.id
-  key    = "index.zip"
-}
-
-resource "awscc_lambda_function" "example" {
-  function_name = "qic-create-session-lmd"
-  description   = "AWS Lambda function"
-  code = {
-    s3_bucket = awscc_s3_bucket.lambda_assets.id
-    s3_key    = aws_s3_object.zip.key
-  }
-  package_type  = "Zip"
-  handler       = "index.handler"
-  runtime       = "python3.13"
-  timeout       = "300"
-  memory_size   = "128"
-  role          = awscc_iam_role.example.arn
-  architectures = ["arm64"]
-  # environment = {
-  #   variables = {
-  #     MY_KEY_1 = "MY_VALUE_1"
-  #     MY_KEY_2 = "MY_VALUE_2"
-  #   }
-  # }
-  ephemeral_storage = {
-    size = 512 # Min 512 MB and the Max 10240 MB
   }
 }
+
+# data "archive_file" "example" {
+#   type        = "zip"
+#   source_file = "task/qic-create-session-lmd/index.py"
+#   output_path = "task/qic-create-session-lmd/index.zip"
+# }
+
+
+# resource "aws_s3_object" "zip" {
+#   source = data.archive_file.example.output_path
+#   bucket = awscc_s3_bucket.lambda_assets.id
+#   key    = "index.zip"
+# }
+
+# resource "awscc_lambda_function" "example" {
+#   function_name = "qic-create-session-lmd"
+#   description   = "AWS Lambda function"
+#   code = {
+#     s3_bucket = awscc_s3_bucket.lambda_assets.id
+#     s3_key    = aws_s3_object.zip.key
+#   }
+#   package_type  = "Zip"
+#   handler       = "index.handler"
+#   runtime       = "python3.13"
+#   timeout       = "300"
+#   memory_size   = "128"
+#   role          = awscc_iam_role.example.arn
+#   architectures = ["arm64"]
+#   # environment = {
+#   #   variables = {
+#   #     MY_KEY_1 = "MY_VALUE_1"
+#   #     MY_KEY_2 = "MY_VALUE_2"
+#   #   }
+#   # }
+#   ephemeral_storage = {
+#     size = 512 # Min 512 MB and the Max 10240 MB
+#   }
+# }
+# resource "aws_iam_policy" "allow_wisdom" {
+#   name = "allow_wisdom_policy"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action   = ["wisdom:*"]
+#         Effect   = "Allow"
+#         Resource = "*"
+#       },
+#     ]
+#   })
+# }
+# resource "awscc_iam_role" "example" {
+#   description = "AWS IAM role for lambda function"
+#   assume_role_policy_document = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Effect = "Allow"
+#         Sid    = ""
+#         Principal = {
+#           Service = "lambda.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
+
+#   managed_policy_arns         = [aws_iam_policy.allow_wisdom.arn]
+
+# }

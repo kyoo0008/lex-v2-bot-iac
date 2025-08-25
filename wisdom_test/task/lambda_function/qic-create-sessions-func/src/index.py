@@ -27,3 +27,4 @@ def handler(event, context):
         "sessionArn": response.get("session", {}).get("sessionArn", "")
     }
 
+

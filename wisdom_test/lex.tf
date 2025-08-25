@@ -71,7 +71,7 @@ resource "awscc_lex_bot" "bot_from_folder" {
   }
   idle_session_ttl_in_seconds   = 300
   role_arn                      = aws_iam_role.lex_role.arn
-  auto_build_bot_locales        = true
+  auto_build_bot_locales        = true # bot 자동 빌드 활성화
 
   bot_file_s3_location = {
     s3_bucket     = aws_s3_bucket.lex_bot_bucket.id
@@ -89,9 +89,101 @@ resource "awscc_lex_bot" "bot_from_folder" {
   ]
 }
 
+resource "awscc_lex_bot_version" "bot_new_version" {
+  bot_id         = awscc_lex_bot.bot_from_folder.bot_id
+  bot_version_locale_specification = [
+    for locale_code in local.locales : {
+      locale_id = locale_code                 
+      bot_version_locale_details = {
+        source_bot_version = "DRAFT"
+      }
+    }
+  ]
+}
+
+
+
+resource "awscc_lex_bot_alias" "example" {
+  bot_alias_name = "ready"
+  bot_id         = awscc_lex_bot.bot_from_folder.bot_id
+  bot_version    = awscc_lex_bot_version.bot_new_version.bot_version
+  description    = "Test bot alias for example"
+
+  bot_alias_locale_settings = [
+    for locale_code in local.locales : {
+      locale_id = locale_code                 
+      bot_alias_locale_setting = {
+        enabled = true
+        code_hook_specification = {
+          lambda_code_hook = {
+            lambda_arn                  = "${module.lmd_lex_hook_func.lmd_func_arn}"
+            code_hook_interface_version = "1.0"
+          }
+        }
+      }
+    }
+    
+  ]
+
+  sentiment_analysis_settings = {
+    detect_sentiment = true
+  }
+
+  conversation_log_settings = {
+    text_log_settings = [{
+      enabled = true
+      destination = {
+        cloudwatch = {
+          cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.lex_bot.arn}",
+          log_prefix               = "${local.lex_bot_name}/"
+        }
+      }
+    }]
+  }
+
+  bot_alias_tags = [
+    {
+      key   = "Environment"
+      value = "${local.env}"
+    },
+    {
+      key   = "Modified By"
+      value = "AWSCC"
+    }
+  ]
+}
+
 resource "aws_cloudwatch_log_group" "lex_bot" {
   provider = aws
 
   name              = local.lex_bot_log_group_name
   # retention_in_days = 14
+}
+
+# lmd_summarize_transcript 모듈 호출
+module "lmd_lex_hook_func" {
+  source = "./modules/terraform-aicc-lmd-python"
+
+  application      = var.application
+  boundary         = local.boundary
+  env              = local.env
+  func_name        = local.lex_hook_func.name
+  func_description = local.lex_hook_func.desc
+
+  func_source_path     = "task/lambda_function/${local.lex_hook_func.name}/src"
+  func_source_zip_path = "task/lambda_function/${local.lex_hook_func.name}.zip"
+
+  func_environment_variables = {
+    # ENV               = var.env
+  }
+
+  func_architecture    = ["x86_64"]
+  func_runtime         = "python3.13"
+  func_timeout         = 600
+  func_memory_size_mb  = 128
+  func_storage_size_mb = 512
+  func_tracing_mode    = "PassThrough"
+
+  
+  # func_inline_policy_json = {}
 }

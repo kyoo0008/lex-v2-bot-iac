@@ -17,3 +17,6 @@ variable "connect_instance_alias" {
 }
 
 
+variable "application" {
+  default = "qic-test"
+}
