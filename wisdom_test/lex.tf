@@ -191,6 +191,7 @@ module "lmd_lex_hook_func" {
 
 resource "terraform_data" "associate_bot" {
   triggers_replace = [
+    awscc_lex_bot.bot_from_folder,
     awscc_lex_bot_alias.example,
     awscc_lex_bot_version.bot_new_version
   ]
@@ -214,7 +215,7 @@ resource "terraform_data" "associate_bot" {
   }
 
   depends_on = [
-    aws_lexv2models_bot.bot,
+    awscc_lex_bot.bot_from_folder,
     awscc_lex_bot_alias.example,
     awscc_lex_bot_version.bot_new_version
   ]
