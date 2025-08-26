@@ -19,10 +19,9 @@ resource "aws_iam_role_policy_attachment" "lex_policy_attachment" {
 }
 
 resource "aws_iam_role_policy" "runtime_inline" {
-  provider = aws
 
   name   = "LexV2BotRuntimeInlinePolicy"
-  role   = aws_iam_role.lex_role.id
+  role   = aws_iam_role.lex_role.name
   policy = jsonencode({
     Version = "2012-10-17" # IAM 정책 버전
     Statement = [
@@ -51,11 +50,10 @@ resource "aws_iam_role_policy" "runtime_inline" {
         Effect = "Allow"
         Action = [
           "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:CreateLogGroup"
+          "logs:PutLogEvents"
         ]
         Resource = [
-          "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:${local.lex_bot_log_group_name}:*"
+          "${aws_cloudwatch_log_group.lex_bot.arn}"
         ]
       },
       {

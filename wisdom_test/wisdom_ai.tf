@@ -1,6 +1,3 @@
-# To-do : 다른 assistant, locale 끼리의 session 처리는 어떻게 할 것인지 고민...=>Flow setContactData 에서 wisdomSessionArn을 설정하여 Lex로 넘겨줌 => lambda로 구현??
-# To-do : prompt yaml translator, validator
-# To-do : QiC Logging 활성화 
 
 # 로케일별 Assistant 생성
 resource "awscc_wisdom_assistant" "locale_assistants" {
@@ -126,73 +123,77 @@ module "lmd_qic_create_sessions" {
   }
 }
 
-# data "archive_file" "example" {
-#   type        = "zip"
-#   source_file = "task/qic-create-session-lmd/index.py"
-#   output_path = "task/qic-create-session-lmd/index.zip"
-# }
+
+# -----------------------------------------------------------------------------
+# Enable Q in Connect Assistant Logging
+# -----------------------------------------------------------------------------
+
+# Create a SINGLE CloudWatch Log Group for all assistants
+resource "aws_cloudwatch_log_group" "qconnect_assistant_logs" {
+  name              = "/aws/qconnect/assistants/all-locales"
+  retention_in_days = 7
+}
+
+# Resource policy to allow the CloudWatch Logs service to deliver logs from Amazon Q
+resource "aws_cloudwatch_log_resource_policy" "qconnect_delivery_policy" {
+  policy_name = "qconnect-log-delivery-policy"
+  policy_document = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "AllowQinConnectLogDelivery"
+        Effect   = "Allow"
+        Principal = {
+          Service = "delivery.logs.amazonaws.com"
+        }
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        # CHANGE: Point to the single log group's ARN
+        Resource = "${aws_cloudwatch_log_group.qconnect_assistant_logs.arn}:*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          },
+          ArnLike = {
+            "aws:SourceArn" = "arn:aws:wisdom:${var.region}:${data.aws_caller_identity.current.account_id}:assistant/*"
+          }
+        }
+      },
+    ]
+  })
+}
 
 
-# resource "aws_s3_object" "zip" {
-#   source = data.archive_file.example.output_path
-#   bucket = awscc_s3_bucket.lambda_assets.id
-#   key    = "index.zip"
-# }
+resource "aws_cloudwatch_log_delivery_source" "qconnect_assistant_source" {
+  for_each     = awscc_wisdom_assistant.locale_assistants
+  # CHANGE: 밑줄(_)을 하이픈(-)으로 변경하여 유효한 이름 생성
+  name         = "qconnect-source-${replace(each.key, "_", "-")}"
+  resource_arn = each.value.assistant_arn
+  log_type     = "EVENT_LOGS"
 
-# resource "awscc_lambda_function" "example" {
-#   function_name = "qic-create-session-lmd"
-#   description   = "AWS Lambda function"
-#   code = {
-#     s3_bucket = awscc_s3_bucket.lambda_assets.id
-#     s3_key    = aws_s3_object.zip.key
-#   }
-#   package_type  = "Zip"
-#   handler       = "index.handler"
-#   runtime       = "python3.13"
-#   timeout       = "300"
-#   memory_size   = "128"
-#   role          = awscc_iam_role.example.arn
-#   architectures = ["arm64"]
-#   # environment = {
-#   #   variables = {
-#   #     MY_KEY_1 = "MY_VALUE_1"
-#   #     MY_KEY_2 = "MY_VALUE_2"
-#   #   }
-#   # }
-#   ephemeral_storage = {
-#     size = 512 # Min 512 MB and the Max 10240 MB
-#   }
-# }
-# resource "aws_iam_policy" "allow_wisdom" {
-#   name = "allow_wisdom_policy"
+  depends_on = [aws_cloudwatch_log_resource_policy.qconnect_delivery_policy]
+}
 
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action   = ["wisdom:*"]
-#         Effect   = "Allow"
-#         Resource = "*"
-#       },
-#     ]
-#   })
-# }
-# resource "awscc_iam_role" "example" {
-#   description = "AWS IAM role for lambda function"
-#   assume_role_policy_document = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole"
-#         Effect = "Allow"
-#         Sid    = ""
-#         Principal = {
-#           Service = "lambda.amazonaws.com"
-#         }
-#       }
-#     ]
-#   })
+# Define a SINGLE CloudWatch Log Group as the destination for the logs
+resource "aws_cloudwatch_log_delivery_destination" "qconnect_assistant_destination" {
+  name          = "qconnect-destination-all-locales"
+  output_format = "json"
+  delivery_destination_configuration {
+    # CHANGE: Point to the single log group's ARN
+    destination_resource_arn = aws_cloudwatch_log_group.qconnect_assistant_logs.arn
+  }
+}
 
-#   managed_policy_arns         = [aws_iam_policy.allow_wisdom.arn]
+resource "aws_cloudwatch_log_delivery" "qconnect_assistant_delivery" {
+  for_each                 = awscc_wisdom_assistant.locale_assistants
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.qconnect_assistant_destination.arn
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.qconnect_assistant_source[each.key].name
 
-# }
+
+  depends_on = [
+    aws_cloudwatch_log_delivery_destination.qconnect_assistant_destination,
+    aws_cloudwatch_log_delivery_source.qconnect_assistant_source
+  ]
+}
