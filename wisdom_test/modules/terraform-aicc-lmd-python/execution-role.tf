@@ -26,7 +26,7 @@ resource "aws_iam_role" "lmd_exec_role" {
     Version = "2012-10-17"
   })
 
-  permissions_boundary = data.aws_iam_policy.service_common_boundary.arn
+  # permissions_boundary = data.aws_iam_policy.service_common_boundary.arn
 
   # etc.
   tags = {

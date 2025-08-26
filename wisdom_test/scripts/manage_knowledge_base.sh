@@ -10,7 +10,7 @@ if [ -z "$KMS_KEY_ID_ARN" ] || [ -z "$CONTENT_PATH" ] || [ -z "$KNOWLEDGE_BASE_N
   exit 1
 fi
 
-# To-do : Connect Instance <-> ASSISTANT, KB Association
+
 
 ASSISTANT_ID=$(echo "$ASSISTANT_ARN" | awk -F'/' '{print $NF}')
 
