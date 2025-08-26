@@ -18,6 +18,57 @@ resource "aws_iam_role_policy_attachment" "lex_policy_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonLexFullAccess"
 }
 
+resource "aws_iam_role_policy" "runtime_inline" {
+  provider = aws
+
+  name   = "LexV2BotRuntimeInlinePolicy"
+  role   = aws_iam_role.lex_role.id
+  policy = jsonencode({
+    Version = "2012-10-17" # IAM 정책 버전
+    Statement = [
+      {
+        Sid    = "AllowAction"
+        Effect = "Allow"
+        Action = [
+          "polly:SynthesizeSpeech",
+        ]
+        Resource = [
+          "*",
+        ]
+      },
+      {
+        Sid    = "DetectSentimentPolicy"
+        Effect = "Allow"
+        Action = [
+          "comprehend:DetectSentiment"
+        ]
+        Resource = [
+          "*"
+        ]
+      },
+      {
+        Sid    = "CloudWatchPolicyID"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = [
+          "${aws_cloudwatch_log_group.lex_bot.arn}"
+        ]
+      },
+      {
+        Sid = "AllowWisdom"
+        Effect = "Allow"
+        Action = [
+          "wisdom:*"
+        ]
+        Resource = ["*"]
+      }
+    ]
+  })
+}
+
 # --- 2. 봇 정의 파일을 저장할 S3 버킷 생성 ---
 resource "aws_s3_bucket" "lex_bot_bucket" {
   bucket = "lex-bot-definition-bucket"
@@ -139,7 +190,18 @@ resource "awscc_lex_bot_alias" "example" {
         }
       }
     }]
+    audio_log_settings = [{
+      enabled = false
+      destination = {
+        s3_bucket = {
+          s3_bucket_arn = "${aws_s3_bucket.lex_bot_bucket.arn}"
+          log_prefix = "audio/"
+        }
+      }
+    }]
   }
+
+
 
   bot_alias_tags = [
     {
@@ -149,9 +211,14 @@ resource "awscc_lex_bot_alias" "example" {
     {
       key   = "Modified By"
       value = "AWSCC"
+    },
+    {
+      key = "AmazonConnectEnabled"
+      value = "True"
     }
   ]
 }
+
 
 resource "aws_cloudwatch_log_group" "lex_bot" {
   provider = aws
