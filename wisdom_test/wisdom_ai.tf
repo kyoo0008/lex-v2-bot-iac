@@ -150,7 +150,6 @@ resource "aws_cloudwatch_log_resource_policy" "qconnect_delivery_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        # CHANGE: Point to the single log group's ARN
         Resource = "${aws_cloudwatch_log_group.qconnect_assistant_logs.arn}:*"
         Condition = {
           StringEquals = {
@@ -166,9 +165,9 @@ resource "aws_cloudwatch_log_resource_policy" "qconnect_delivery_policy" {
 }
 
 
+
 resource "aws_cloudwatch_log_delivery_source" "qconnect_assistant_source" {
   for_each     = awscc_wisdom_assistant.locale_assistants
-  # CHANGE: 밑줄(_)을 하이픈(-)으로 변경하여 유효한 이름 생성
   name         = "qconnect-source-${replace(each.key, "_", "-")}"
   resource_arn = each.value.assistant_arn
   log_type     = "EVENT_LOGS"
@@ -181,12 +180,11 @@ resource "aws_cloudwatch_log_delivery_destination" "qconnect_assistant_destinati
   name          = "qconnect-destination-all-locales"
   output_format = "json"
   delivery_destination_configuration {
-    # CHANGE: Point to the single log group's ARN
     destination_resource_arn = aws_cloudwatch_log_group.qconnect_assistant_logs.arn
   }
 }
-
-resource "aws_cloudwatch_log_delivery" "qconnect_assistant_delivery" {
+# destroy : aws logs delete-delivery --id {delivery_id} 를 먼저 실행
+resource "aws_cloudwatch_log_delivery" "qconnect_assistant_delivery" { 
   for_each                 = awscc_wisdom_assistant.locale_assistants
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.qconnect_assistant_destination.arn
   delivery_source_name     = aws_cloudwatch_log_delivery_source.qconnect_assistant_source[each.key].name
@@ -196,4 +194,10 @@ resource "aws_cloudwatch_log_delivery" "qconnect_assistant_delivery" {
     aws_cloudwatch_log_delivery_destination.qconnect_assistant_destination,
     aws_cloudwatch_log_delivery_source.qconnect_assistant_source
   ]
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "aws logs delete-delivery --id ${self.id}"
+  }
 }
+
