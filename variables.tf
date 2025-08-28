@@ -16,3 +16,7 @@ variable "connect_instance_alias" {
   default     = "ivr-aicc-test-b"
 }
 
+
+variable "application" {
+  default = "qic-test"
+}
