@@ -25,17 +25,21 @@ resource "awscc_wisdom_assistant" "locale_assistants" {
 module "wisdom_ai_agents" {
   for_each = awscc_wisdom_assistant.locale_assistants
 
-  source "./modules/terraform-wisdom-ai"
-
-  # 모듈에 필요한 변수들을 전달합니다.
+  source = "./modules/terraform-wisdom-ai"
+  locale = each.key
+  env = local.env
+  prompt_model_id = local.prompt_model_id
+  region              = var.region
   assistant_arn       = each.value.assistant_arn
   connect_instance_id = data.aws_connect_instance.connect_instance.id
 
-  region              = var.region
+  self_service_pre_processing_prompt_content = "${data.local_file.prompts["${each.key}.self_service_pre_processing"].content}"
+  self_service_answer_generation_prompt_content = "${data.local_file.prompts["${each.key}.self_service_answer_generation"].content}"
 
   depends_on = [
     data.aws_kms_key.example,
-    awscc_wisdom_assistant.locale_assistants
+    awscc_wisdom_assistant.locale_assistants,
+    data.local_file.prompts
   ]
 }
 
