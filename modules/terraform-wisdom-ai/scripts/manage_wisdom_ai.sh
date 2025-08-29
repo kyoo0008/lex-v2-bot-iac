@@ -15,7 +15,7 @@ create_prompt_version() {
   local prompt_id="$1"
   if [ -z "$prompt_id" ]; then
     echo "Error: Prompt ID is required to create a version." >&2
-    return 1
+    exit 1
   fi
 
   # echo "Creating a new version for prompt ID '$prompt_id'..."
@@ -42,7 +42,7 @@ create_agent_version() {
   local agent_id="$1"
   if [ -z "$agent_id" ]; then
     echo "Error: Agent ID is required to create a version." >&2
-    return 1
+    exit 1
   fi
 
   local version_info
@@ -132,7 +132,7 @@ delete_unused_agents() {
       --output text)
       
     if [ -n "$existing_agent_id" ]; then
-      remove_assistant_ai_agent $ASSISTANT_ID $agent_type
+      remove_assistant_ai_agent $ASSISTANT_ID $agent_type # default assistant ai agent remove
       echo "Found existing agent '$agent_name' with ID '$existing_agent_id'. Deleting..."
       aws qconnect delete-ai-agent \
         --assistant-id "$ASSISTANT_ID" \
