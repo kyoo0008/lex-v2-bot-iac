@@ -109,7 +109,7 @@ resource "aws_s3_object" "bot_definition_upload" {
   bucket = aws_s3_bucket.lex_bot_bucket.id
   key    = "bot-definition-final.zip"
   source = data.archive_file.bot_zip.output_path
-  source_hash = filemd5(data.archive_file.bot_zip.output_path)
+  etag = filemd5(data.archive_file.bot_zip.output_path)
 }
 
 # Lex 봇 생성(association, alias, version 연계는 나중에)

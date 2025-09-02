@@ -400,3 +400,5 @@ terraform.*
 *.tfstate.*
 .terraformrc
 terraform.rc
+
+modules/**/.*_output_*.json
