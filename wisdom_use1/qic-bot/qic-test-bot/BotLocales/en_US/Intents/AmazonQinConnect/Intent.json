@@ -84,7 +84,7 @@
             }
         },
         "fulfillmentUpdatesSpecification": null,
-        "enabled": false
+        "enabled": true
     },
     "slotPriorities":
     []
