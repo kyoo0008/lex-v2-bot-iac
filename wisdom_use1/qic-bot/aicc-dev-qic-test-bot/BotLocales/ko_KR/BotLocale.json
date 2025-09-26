@@ -1,0 +1,20 @@
+{
+  "name": "Korean (South Korea)",
+  "description": null,
+  "version": null,
+  "identifier": "ko_KR",
+  "generativeAISettings": {
+    "buildtimeSettings": null,
+    "runtimeSettings": {
+      "nluImprovementSpecification": {
+        "enabled": false
+      },
+      "slotResolutionImprovementSpecification": null
+    }
+  },
+  "nluConfidenceThreshold": 0.99,
+  "voiceSettings": {
+    "engine": "neural",
+    "voiceId": "Seoyeon"
+  }
+}

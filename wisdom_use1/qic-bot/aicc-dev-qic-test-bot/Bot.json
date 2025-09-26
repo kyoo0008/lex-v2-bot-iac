@@ -1,0 +1,11 @@
+{
+  "name": "aicc-dev-qic-test-bot",
+  "description": "QiC Main Bot Test",
+  "version": "1",
+  "identifier": "ZWPMCQTCXF",
+  "dataPrivacy": {
+    "childDirected": false
+  },
+  "errorLogSettings": null,
+  "idleSessionTTLInSeconds": 300
+}

@@ -1,72 +1,4 @@
 
-# resource "aws_iam_role" "lex_role" {
-#   name = "lexv2-bot-from-local-file-role"
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [{
-#       Action = "sts:AssumeRole",
-#       Effect = "Allow",
-#       Principal = {
-#         Service = "lex.amazonaws.com"
-#       }
-#     }]
-#   })
-# }
-
-# resource "aws_iam_role_policy_attachment" "lex_policy_attachment" {
-#   role       = data.aws_iam_role.lex_role.name
-#   policy_arn = "arn:aws:iam::aws:policy/AmazonLexFullAccess"
-# }
-
-# resource "aws_iam_role_policy" "runtime_inline" {
-
-#   name   = "LexV2BotRuntimeInlinePolicy"
-#   role   = data.aws_iam_role.lex_role.name
-#   policy = jsonencode({
-#     Version = "2012-10-17" # IAM 정책 버전
-#     Statement = [
-#       {
-#         Sid    = "AllowAction"
-#         Effect = "Allow"
-#         Action = [
-#           "polly:SynthesizeSpeech",
-#         ]
-#         Resource = [
-#           "*",
-#         ]
-#       },
-#       {
-#         Sid    = "DetectSentimentPolicy"
-#         Effect = "Allow"
-#         Action = [
-#           "comprehend:DetectSentiment"
-#         ]
-#         Resource = [
-#           "*"
-#         ]
-#       },
-#       {
-#         Sid    = "CloudWatchPolicyID"
-#         Effect = "Allow"
-#         Action = [
-#           "logs:CreateLogStream",
-#           "logs:PutLogEvents"
-#         ]
-#         Resource = [
-#           "${aws_cloudwatch_log_group.lex_bot.arn}"
-#         ]
-#       },
-#       {
-#         Sid = "AllowWisdom"
-#         Effect = "Allow"
-#         Action = [
-#           "wisdom:*"
-#         ]
-#         Resource = ["*"]
-#       }
-#     ]
-#   })
-# }
 
 # --- 2. 봇 정의 파일을 저장할 S3 버킷 생성 ---
 resource "aws_s3_bucket" "lex_bot_bucket" {
@@ -112,7 +44,7 @@ resource "aws_s3_object" "bot_definition_upload" {
   etag = filemd5(data.archive_file.bot_zip.output_path)
 }
 
-# Lex 봇 생성(association, alias, version 연계는 나중에)
+# Lex 봇 생성
 resource "awscc_lex_bot" "bot_from_folder" {
   # `${local.lex_bot_full_name}/Bot.json` 파일에 정의된 'name'과 일치해야 합니다.
   name                          = "${local.lex_bot_full_name}" 
@@ -149,6 +81,11 @@ resource "awscc_lex_bot_version" "bot_new_version" {
       }
     }
   ]
+
+  lifecycle {
+    create_before_destroy = true
+    replace_triggered_by = [aws_s3_object.bot_definition_upload]
+  }
 }
 
 
@@ -216,7 +153,22 @@ resource "awscc_lex_bot_alias" "example" {
       value = "True"
     }
   ]
+
 }
+
+
+resource "aws_lambda_permission" "allow_lex_to_invoke_qic_api_caller" {
+  statement_id  = "AllowLexV2ToInvokeQICAPICaller"
+  action        = "lambda:InvokeFunction"
+  function_name = data.aws_lambda_function.qic_apigateway_caller.function_name
+  principal     = "lexv2.amazonaws.com"
+  source_arn    = "arn:aws:lex:${var.region}:${data.aws_caller_identity.current.account_id}:bot-alias/*"
+
+  depends_on = [
+    awscc_lex_bot_alias.example
+  ]
+}
+
 
 
 resource "aws_cloudwatch_log_group" "lex_bot" {
@@ -259,3 +211,4 @@ resource "terraform_data" "associate_bot" {
   ]
 
 }
+

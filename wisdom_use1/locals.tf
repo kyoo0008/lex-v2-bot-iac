@@ -7,7 +7,7 @@ locals {
 
   # 4개의 로케일 정의
   # locales = ["en_US", "ko_KR", "zh_CN", "ja_JP"]
-  locales = ["en_US"]
+  locales = ["en_US", "ko_KR"]
   
   # To-do : agent_Type도 다중 처리 필요 
   # MANUAL_SEARCH,ANSWER_RECOMMENDATION,SELF_SERVICE  
@@ -113,7 +113,7 @@ locals {
   lex_source_root_folder = "qic-bot"
 
   lex_bot_name           = "qic-test-bot"
-  lex_bot_full_name      = "${local.naming_prefix}-qic-test-bot"
+  lex_bot_full_name      = "${local.naming_prefix}-${local.lex_bot_name}"
   # 실제 파일 시스템에서의 전체 경로
   full_source_root_path = "${var.project_root_path}${local.lex_source_root_folder}"
 
@@ -129,13 +129,13 @@ locals {
   intent_data_by_locale = {
     for locale in local.locales : locale => {
       # 1. 각 로케일별 Intent 파일의 상대 경로를 정의
-      relative_path = "${local.lex_bot_name}/BotLocales/${locale}/Intents/AmazonQinConnect/Intent.json"
+      relative_path = "${local.lex_bot_full_name}/BotLocales/${locale}/Intents/AmazonQinConnect/Intent.json"
 
       # 2. 수정된 최종 JSON 문자열을 생성
       # 모든 계산을 jsonencode 함수 내에서 한 번에 처리하여 순환 참조를 방지합니다.
       modified_json_string = jsonencode(merge(
         # 2a. 원본 JSON 파일을 읽고 파싱
-        jsondecode(file("${local.full_source_root_path}/${local.lex_bot_name}/BotLocales/${locale}/Intents/AmazonQinConnect/Intent.json")),
+        jsondecode(file("${local.full_source_root_path}/${local.lex_bot_full_name}/BotLocales/${locale}/Intents/AmazonQinConnect/Intent.json")),
         # 2b. 삽입할 새로운 설정을 정의 (Wisdom Assistant ARN을 동적으로 참조)
         {
           qInConnectIntentConfiguration = {

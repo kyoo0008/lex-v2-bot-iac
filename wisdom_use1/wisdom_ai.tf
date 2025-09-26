@@ -177,9 +177,3 @@ resource "aws_connect_lambda_function_association" "lmd_qic_apigateway_caller_as
   instance_id = data.aws_connect_instance.connect_instance.id
 }
 
-
-
-
-
-
-

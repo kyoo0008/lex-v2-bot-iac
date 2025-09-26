@@ -1,6 +1,6 @@
 {
     "name": "AmazonQinConnect",
-    "identifier": "XNGVYT7ORJ",
+    "identifier": "FSHO4QSR7A",
     "description": "This intent leverages Amazon Q in Connect to fulfill requests or tasks.",
     "parentIntentSignature": "AMAZON.QInConnectIntent",
     "sampleUtterances": null,
@@ -15,10 +15,13 @@
     {
         "qInConnectAssistantConfiguration":
         {
-            "assistantArn": "arn:aws:wisdom:ap-northeast-2:009160043124:assistant/045dcfe4-950d-473e-9a60-25e0690ba821"
+            "assistantArn": "arn:aws:wisdom:us-east-1:637423289860:assistant/b39abd62-30c4-4bf5-b95e-593b230b55e1"
         }
     },
-    "dialogCodeHook": null,
+    "dialogCodeHook":
+    {
+        "enabled": false
+    },
     "fulfillmentCodeHook":
     {
         "isActive": true,

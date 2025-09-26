@@ -1,0 +1,11 @@
+{
+  "name": "English (US)",
+  "description": null,
+  "version": null,
+  "identifier": "en_US",
+  "nluConfidenceThreshold": 0.99,
+  "voiceSettings": {
+    "engine": "standard",
+    "voiceId": "Joanna"
+  }
+}
