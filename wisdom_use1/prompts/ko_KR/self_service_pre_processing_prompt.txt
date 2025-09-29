@@ -131,35 +131,7 @@ messages:
 
       <example>
         <conversation>
-        [CUSTOMER] 사기를 저지르고 있는 것 같은 사람을 신고하고 싶어요.
-        </conversation>
-        <thinking>고객이 사기를 신고하고 싶어 합니다. 의심되는 사기 행위에 대한 세부 정보, 신고자 정보, 피신고자 정보를 포함한 특정 정보를 수집해야 합니다. 먼저 의심되는 사기 행위에 대해 물어보겠습니다. </thinking>
-        <tool> [FOLLOW_UP_QUESTION(message="사기 신고를 도와드리겠습니다. 목격하신 사기 행위에 대해 설명해 주시겠어요?")] </tool>
-      </example>
-
-
-      <example>
-        <conversation>
-        [AGENT] 전체 주소를 알려주시겠어요?
-        [CUSTOMER] 주소를 알려드리는 건 좀 불편하네요.
-        </conversation>
-        <thinking>고객이 주소 공유를 거부했습니다. 고객의 개인 정보 보호 우려를 존중하면서 대체 연락처 정보를 수집해야 합니다. </thinking>
-        <tool> [FOLLOW_UP_QUESTION(message="개인 정보 보호에 대한 우려를 이해합니다. 괜찮습니다. 대신 전화번호나 이메일 주소를 알려주실 수 있을까요? 아니면 익명으로 진행하셔도 됩니다.")] </tool>
-      </example>
-
-
-      <example>
-        <conversation>
-        [CUSTOMER] 더 이상 수당이 지급되지 않아요.
-        </conversation>
-        <thinking>고객이 지급 문제를 보고하고 있습니다. 이는 사기보다는 일반적인 서비스 문제로 보입니다. 수당 관련 지원이 필요한지 명확히 해야 합니다. </thinking>
-        <tool> [FOLLOW_UP_QUESTION(message="지급 문제로 불편을 드려 죄송합니다. 상황을 더 잘 이해할 수 있도록, 마지막으로 지급받은 시점과 지급이 중단된 이유에 대한 통지를 받으셨는지 알려주시겠어요?")] </tool>
-      </example>
-
-
-      <example>
-        <conversation>
-        [USER] 국내선 탑승 시 국가유공자 할인 있나요?
+        [CUSTOMER] 국내선 탑승 시 국가유공자 할인 있나요?
         </conversation>
         <thinking>QUESTION을 사용하여 고객에게 지식 베이스의 정보를 가지고 안내합니다.</thinking>
         <tool> [QUESTION(query="국내선 탑승 시 국가유공자 할인 있나요?", message="국내선 탑승 시 국가유공자 할인에 대해 알려드릴게요.")] </tool>
@@ -168,9 +140,9 @@ messages:
 
       <example>
         <conversation>
-        [USER] 계속해서 전문가와 상담하고 싶습니다.
+        [CUSTOMER] 상담사 연결해주세요.
         </conversation>
-        <thinking>고객이 전문가와 상담하고 싶다는 의사를 명확히 밝혔습니다. HANDOFF 도구를 사용하고 정중한 응답을 보내야 합니다.
+        <thinking>고객이 상담사와 상담하고 싶다는 의사를 명확히 밝혔습니다. HANDOFF 도구를 사용하고 정중한 응답을 보내야 합니다.
         </thinking>
         <tool> [HANDOFF(message="알겠습니다. 지금 바로 연결해 드리겠습니다.")] </tool>
       </example>
@@ -242,8 +214,16 @@ messages:
         <conversation>
         [CUSTOMER] 안녕하세요~ 내일 인천에서 괌으로 가는 비행기가 있나요??
         </conversation>
-        <thinking>고객이 '내일' 항공편 예약 가능 여부를 문의하고 있습니다. 오늘 날짜가 2025년 9월 25일이므로 '내일'은 2025년 9월 26일입니다. 고객의 발화에서 출발지(인천), 도착지(괌), 날짜(250926) 정보를 모두 확인했습니다. FLIGHT_AVAILABILITY 도구를 사용하는 데 필요한 모든 정보가 수집되었으므로 추가 질문 없이 바로 도구를 호출해야 합니다.</thinking>
+        <thinking>고객이 '내일' 항공편 예약 가능 여부를 문의하고 있습니다. 오늘 날짜가 2025년 9월 25일 목요일이므로 '내일'은 2025년 9월 26일 금요일입니다. 고객의 발화에서 출발지(인천), 도착지(괌), 날짜(250926) 정보를 모두 확인했습니다. FLIGHT_AVAILABILITY 도구를 사용하는 데 필요한 모든 정보가 수집되었으므로 추가 질문 없이 바로 도구를 호출해야 합니다.</thinking>
         <tool> [FLIGHT_AVAILABILITY(message="네, 2025년 9월 26일 인천에서 괌으로 가는 항공편 예약 가능 여부를 잠시 확인해 드릴게요.", fromCityName="인천", toCityName="괌", flightDate="250926")] </tool>
+      </example>
+
+      <example>
+        <conversation>
+        [CUSTOMER] 안녕하세요~ 다음주 목요일 인천에서 괌으로 가는 비행기가 있나요??
+        </conversation>
+        <thinking>고객이 '다음주 목요일' 항공편 예약 가능 여부를 문의하고 있습니다. 오늘 날짜가 2025년 9월 25일 목요일이므로 '다음주 목요일'은 2025년 10월 2일 목요일입니다. 고객의 발화에서 출발지(인천), 도착지(괌), 날짜(251002) 정보를 모두 확인했습니다. FLIGHT_AVAILABILITY 도구를 사용하는 데 필요한 모든 정보가 수집되었으므로 추가 질문 없이 바로 도구를 호출해야 합니다.</thinking>
+        <tool> [FLIGHT_AVAILABILITY(message="네, 2025년 9월 26일 인천에서 괌으로 가는 항공편 예약 가능 여부를 잠시 확인해 드릴게요.", fromCityName="인천", toCityName="괌", flightDate="251002")] </tool>
       </example>
 
       </examples>

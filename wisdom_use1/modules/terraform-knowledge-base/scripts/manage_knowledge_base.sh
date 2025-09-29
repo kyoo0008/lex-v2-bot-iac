@@ -72,7 +72,7 @@ start_content_upload() {
     exit 1
   fi
   # 지원되는 KB Content 확장자 .pdf, .txt, .docx, .html/.htm 
-  find "$CONTENT_PATH" -type f \( -name "*.docx" -o -name "*.txt" \) | while read -r FILE_PATH; do
+  find "$CONTENT_PATH" -type f \( -name "*.docx" -o -name "*.txt" -o -name "*.pdf" \) | while read -r FILE_PATH; do
     echo "--------------------------------------------------"
     echo "Processing file: $FILE_PATH"
 
@@ -99,6 +99,8 @@ start_content_upload() {
       CONTENT_TYPE="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     elif [[ "$FILE_PATH" == *.txt ]]; then
       CONTENT_TYPE="text/plain"
+    elif [[ "$FILE_PATH" == *.pdf ]]; then
+      CONTENT_TYPE="application/pdf"
     else
       echo "Skipping unsupported file type: $FILE_PATH"
       continue
